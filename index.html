@@ -1,39 +1,39 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestor de Órdenes de Pedido (OP) - Versión PRO</title>
+    <title>Gestor de Órdenes de Pedido (OP) - INACAP SGO</title>
     <link rel="stylesheet" href="style.css">
-
     <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.14/index.global.min.js'></script>
-    <script src="https://unpkg.com/dexie@3/dist/dexie.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <!-- Firebase -->
+    <script type="module" src="script.js"></script>
 </head>
-
 <body>
-
     <div class="container">
         <header>
             <h1>Gestor de Órdenes de Pedido (OP) 👨‍🍳👩‍🍳</h1>
+            <div id="sync-status" class="sync-status">🔄 Conectando...</div>
             <nav>
                 <button data-section="configuracion">⚙️ Configuración 🔒</button>
                 <button data-section="ingredientes">🥦 BD Ingredientes</button>
                 <button data-section="ver-ops">📄 Ver OPs</button>
                 <button data-section="programacion">🗓️ Programar Clases</button>
-                <button data-section="gestion-docente" style="border-color: #ffc107; color: #ffc107;">👨‍🏫 Gestión
-                    Docente</button>
+                <button data-section="gestion-docente" style="border-color: #ffc107; color: #ffc107;">👨‍🏫 Gestión Docente</button>
                 <button data-section="calendario" class="active">📅 Calendario</button>
                 <button data-section="horario">📋 Lista Horario</button>
                 <button data-section="consolidado">🛒 Consolidado</button>
+                <button data-section="etiquetas" style="border-color: #17a2b8; color: #17a2b8;">🏷️ Etiquetas</button>
+                <button data-section="bodega" style="border-color: #28a745; color: #28a745;">📦 Bodega</button>
             </nav>
         </header>
 
         <main>
+            <!-- CONFIGURACIÓN -->
             <section id="configuracion">
                 <div id="config-content-wrapper">
-
                     <div class="card">
                         <h3>Paso A: Definir Semanas</h3>
                         <form id="semana-form" class="inline-form">
@@ -43,7 +43,6 @@
                         </form>
                         <ul id="lista-semanas" class="scrollable-list"></ul>
                     </div>
-
                     <div class="card">
                         <h3>Paso B: Profesores</h3>
                         <form id="profesor-form" class="inline-form">
@@ -52,7 +51,6 @@
                         </form>
                         <ul id="lista-profesores" class="scrollable-list"></ul>
                     </div>
-
                     <div class="card">
                         <h3>Paso C: Asignaturas</h3>
                         <form id="asignatura-form" class="inline-form">
@@ -60,10 +58,8 @@
                             <input type="number" id="asignatura-clases" placeholder="Total Clases" required min="1">
                             <button type="submit">Agregar</button>
                         </form>
-                        <input type="hidden" id="asignatura-edit-id">
                         <ul id="lista-asignaturas" class="scrollable-list"></ul>
                     </div>
-
                     <div class="card">
                         <h3>Paso D: Bloquear Feriados</h3>
                         <form id="bloqueo-form" class="inline-form">
@@ -78,54 +74,33 @@
                         </form>
                         <ul id="lista-bloqueos" class="scrollable-list"></ul>
                     </div>
-
                     <div class="card">
                         <h3>Paso E: Crear Órdenes de Pedido (OP)</h3>
-
-                        <div
-                            style="background: #e2e6ea; padding: 10px; border-radius: 6px; margin-bottom: 20px; border: 1px solid #ced4da;">
-                            <label style="font-weight: bold; display: block; margin-bottom: 5px;">📂 Copiar desde otra
-                                OP existente (Opcional):</label>
+                        <div style="background: #e2e6ea; padding: 10px; border-radius: 6px; margin-bottom: 20px; border: 1px solid #ced4da;">
+                            <label style="font-weight: bold; display: block; margin-bottom: 5px;">📂 Copiar desde otra OP existente (Opcional):</label>
                             <div style="display: flex; gap: 10px;">
-                                <select id="op-copy-select" style="flex: 1;">
-                                    <option value="">-- Cargar OPs... --</option>
-                                </select>
-                                <button type="button" id="btn-copy-op"
-                                    style="background-color: #17a2b8; border-color: #17a2b8;">📥 Copiar Datos</button>
+                                <select id="op-copy-select" style="flex: 1;"><option value="">-- Cargar OPs... --</option></select>
+                                <button type="button" id="btn-copy-op" style="background-color: #17a2b8; border-color: #17a2b8;">📥 Copiar Datos</button>
                             </div>
-                            <small style="color: #666;">Esto rellenará el nombre de receta, ingredientes y utensilios
-                                automáticamente.</small>
+                            <small style="color: #666;">Esto rellenará el nombre de receta, ingredientes y utensilios automáticamente.</small>
                         </div>
                         <form id="op-form">
                             <input type="hidden" id="op-edit-id">
                             <div class="inline-form">
-                                <select id="op-asignatura" required>
-                                    <option value="">-- Asignatura --</option>
-                                </select>
-                                <select id="op-clase-numero" required>
-                                    <option value="">-- Clase --</option>
-                                </select>
+                                <select id="op-asignatura" required><option value="">-- Asignatura --</option></select>
+                                <select id="op-clase-numero" required><option value="">-- Clase --</option></select>
                             </div>
-
                             <div class="checkbox-container">
                                 <input type="checkbox" id="op-sin-pedido">
                                 <label for="op-sin-pedido"><b>Clase Sin Pedido (Teórica)</b></label>
                             </div>
-
                             <div id="op-details-section">
-                                <input type="text" id="op-nombre-receta" placeholder="Nombre de la Receta / Preparación"
-                                    required>
-
+                                <input type="text" id="op-nombre-receta" placeholder="Nombre de la Receta / Preparación" required>
                                 <h4>🥦 Ingredientes</h4>
-                                <div class="inline-form"
-                                    style="background: #f8f9fa; padding: 10px; border-radius: 6px;">
-                                    <input type="text" id="ingrediente-nombre-input" list="ingredientes-datalist"
-                                        placeholder="Buscar ingrediente..." autocomplete="off">
+                                <div class="inline-form" style="background: #f8f9fa; padding: 10px; border-radius: 6px;">
+                                    <input type="text" id="ingrediente-nombre-input" list="ingredientes-datalist" placeholder="Buscar ingrediente..." autocomplete="off">
                                     <datalist id="ingredientes-datalist"></datalist>
-
-                                    <input type="number" id="ingrediente-cantidad" placeholder="Cant." min="0"
-                                        step="any" style="width: 80px;">
-
+                                    <input type="number" id="ingrediente-cantidad" placeholder="Cant." min="0" step="any" style="width: 80px;">
                                     <select id="ingrediente-unidad">
                                         <option value="Unidad(es)">Unidad(es)</option>
                                         <option value="Kilo(s)">Kilo(s)</option>
@@ -140,31 +115,25 @@
                                     <button type="button" id="add-ingrediente-btn">Añadir</button>
                                 </div>
                                 <div id="ingredientes-container" style="margin-top:10px;"></div>
-
                                 <hr>
                                 <h4>🍽️ Pañol y Utensilios</h4>
-                                <input type="text" id="op-docente-panol"
-                                    placeholder="Nombre Docente Encargado del Pañol">
-                                <div class="inline-form"
-                                    style="background: #fff0f6; padding: 10px; border-radius: 6px; margin-top: 5px;">
-                                    <input type="text" id="utensilio-nombre"
-                                        placeholder="Nombre Utensilio (ej. Batidor globo)">
-                                    <input type="number" id="utensilio-cantidad" placeholder="Cant." min="1"
-                                        style="width: 80px;">
-                                    <button type="button" id="add-utensilio-btn"
-                                        style="background-color: #d63384; color: white;">+ Utensilio</button>
+                                <input type="text" id="op-docente-panol" placeholder="Nombre Docente Encargado del Pañol">
+                                <div class="inline-form" style="background: #fff0f6; padding: 10px; border-radius: 6px; margin-top: 5px;">
+                                    <input type="text" id="utensilio-nombre" placeholder="Nombre Utensilio (ej. Batidor globo)">
+                                    <input type="number" id="utensilio-cantidad" placeholder="Cant." min="1" style="width: 80px;">
+                                    <button type="button" id="add-utensilio-btn" style="background-color: #d63384; color: white;">+ Utensilio</button>
                                 </div>
                                 <div id="utensilios-container" style="margin-top:10px;"></div>
                             </div>
-
                             <button type="submit" id="op-form-submit-btn">Guardar OP Completa</button>
                         </form>
                     </div>
                 </div>
             </section>
 
+            <!-- INGREDIENTES -->
             <section id="ingredientes">
-                <h2>Base de Datos de Ingredientes (Con Bloqueo de Unidad)</h2>
+                <h2>Base de Datos de Ingredientes</h2>
                 <div class="card">
                     <form id="ingrediente-db-form" class="inline-form">
                         <input type="text" id="ingrediente-db-nombre" placeholder="Nombre Ingrediente" required>
@@ -200,6 +169,7 @@
                 </div>
             </section>
 
+            <!-- VER OPs -->
             <section id="ver-ops">
                 <h2>OPs Guardadas</h2>
                 <div class="card inline-form">
@@ -208,20 +178,15 @@
                 <div id="op-viewer-container"></div>
             </section>
 
+            <!-- PROGRAMACIÓN -->
             <section id="programacion">
                 <h2>Programar Clase</h2>
                 <div class="card">
                     <form id="schedule-form">
                         <div class="inline-form">
-                            <select id="schedule-profesor" required>
-                                <option value="">-- Profesor --</option>
-                            </select>
-                            <select id="schedule-asignatura" required>
-                                <option value="">-- Asignatura --</option>
-                            </select>
-                            <select id="schedule-clase" required>
-                                <option value="">-- Clase --</option>
-                            </select>
+                            <select id="schedule-profesor" required><option value="">-- Profesor --</option></select>
+                            <select id="schedule-asignatura" required><option value="">-- Asignatura --</option></select>
+                            <select id="schedule-clase" required><option value="">-- Clase --</option></select>
                         </div>
                         <div class="inline-form">
                             <select id="schedule-sala" required>
@@ -250,6 +215,7 @@
                 </div>
             </section>
 
+            <!-- GESTIÓN DOCENTE -->
             <section id="gestion-docente">
                 <h2>Gestión Docente (Carga y Reemplazos)</h2>
                 <div class="card" style="background: #f8f9fa; border-left: 5px solid #ffc107;">
@@ -257,28 +223,18 @@
                     <div class="inline-form">
                         <div>
                             <label style="font-weight:bold; font-size:0.9em;">1. Docente:</label><br>
-                            <select id="selDocente" onchange="cambioDocente()" style="width: 180px;">
-                                <option value="">Seleccione...</option>
-                            </select>
+                            <select id="selDocente" onchange="cambioDocente()" style="width: 180px;"><option value="">Seleccione...</option></select>
                         </div>
-
                         <div>
                             <label style="font-weight:bold; font-size:0.9em;">2. Asignatura:</label><br>
-                            <select id="selAsignatura" onchange="cambioAsignatura()" disabled style="width: 180px;">
-                                <option value="">Esperando Docente...</option>
-                            </select>
+                            <select id="selAsignatura" onchange="cambioAsignatura()" disabled style="width: 180px;"><option value="">Esperando Docente...</option></select>
                         </div>
-
                         <div>
                             <label style="font-weight:bold; font-size:0.9em;">3. Día:</label><br>
-                            <select id="selDia" onchange="aplicarFiltroFinal()" disabled style="width: 140px;">
-                                <option value="">Esperando Asignatura...</option>
-                            </select>
+                            <select id="selDia" onchange="aplicarFiltroFinal()" disabled style="width: 140px;"><option value="">Esperando Asignatura...</option></select>
                         </div>
-
                         <div style="align-self: flex-end;">
-                            <button onclick="limpiarFiltros()"
-                                style="background:#6c757d; color:white; padding: 8px 15px;">Limpiar</button>
+                            <button onclick="limpiarFiltros()" style="background:#6c757d; color:white; padding: 8px 15px;">Limpiar</button>
                         </div>
                     </div>
                 </div>
@@ -287,21 +243,30 @@
                 </div>
             </section>
 
+            <!-- CALENDARIO -->
             <section id="calendario" class="active-section">
                 <h2>Calendario Visual</h2>
+                <div class="card" style="background: #f8f9fa; border-left: 5px solid #0056b3; margin-bottom: 15px;">
+                    <div class="inline-form" style="align-items: center;">
+                        <label style="font-weight:bold;">🔍 Filtrar por Profesor:</label>
+                        <select id="calendario-filtro-profesor" style="min-width: 220px;">
+                            <option value="">— Todos los profesores —</option>
+                        </select>
+                        <button type="button" id="btn-limpiar-filtro-cal" style="background:#6c757d; padding: 8px 15px;">Mostrar Todos</button>
+                    </div>
+                </div>
                 <div class="card">
                     <div id="calendar-container"></div>
                 </div>
             </section>
 
+            <!-- HORARIO -->
             <section id="horario">
                 <h2>Lista de Clases para Imprimir</h2>
                 <div class="card">
                     <div class="inline-form">
                         <label>Semana:</label>
-                        <select id="semana-filter">
-                            <option value="TODAS">Mostrar Todas</option>
-                        </select>
+                        <select id="semana-filter"><option value="TODAS">Mostrar Todas</option></select>
                         <button id="print-btn" onclick="imprimirOps()">🖨️ Imprimir OPs Visibles</button>
                     </div>
                     <div id="dias-filter-container" class="inline-form" style="margin-top: 15px;">
@@ -317,6 +282,7 @@
                 <div id="horario-output"></div>
             </section>
 
+            <!-- CONSOLIDADO -->
             <section id="consolidado">
                 <h2>Consolidado de Compras</h2>
                 <div class="card inline-form">
@@ -331,16 +297,77 @@
                     <div id="consolidado-detalle"></div>
                 </div>
             </section>
+
+            <!-- ETIQUETAS -->
+            <section id="etiquetas">
+                <h2>🏷️ Generador de Etiquetas</h2>
+                <div class="card" style="border-left: 5px solid #17a2b8;">
+                    <h4>Seleccionar clases para imprimir etiquetas</h4>
+                    <div class="inline-form">
+                        <label>Semana:</label>
+                        <select id="etiqueta-semana-filter">
+                            <option value="TODAS">Todas las semanas</option>
+                        </select>
+                        <button type="button" id="btn-generar-etiquetas" style="background:#17a2b8;">🏷️ Generar Etiquetas</button>
+                        <button type="button" id="btn-imprimir-etiquetas" style="background:#28a745; display:none;">🖨️ Imprimir</button>
+                    </div>
+                </div>
+                <div id="etiquetas-preview"></div>
+            </section>
+
+            <!-- BODEGA -->
+            <section id="bodega">
+                <h2>📦 Bodega — Monitor en Tiempo Real</h2>
+
+                <!-- Login bodega -->
+                <div id="bodega-login" class="card" style="max-width: 400px; margin: 0 auto; border-left: 5px solid #28a745;">
+                    <h4>👤 Identificarse para despachar</h4>
+                    <div class="inline-form">
+                        <input type="text" id="bodega-nombre-input" placeholder="Tu nombre (ej: María González)" style="flex:1;">
+                        <button type="button" id="btn-bodega-login" style="background:#28a745;">Entrar</button>
+                    </div>
+                </div>
+
+                <div id="bodega-panel" style="display:none;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                        <div class="card" style="flex:1; margin:0 5px 0 0; border-left:5px solid #28a745; padding:10px;">
+                            <b>👤 Despachando como:</b> <span id="bodega-operador-display" style="color:#28a745; font-size:1.1em;"></span>
+                        </div>
+                        <button type="button" onclick="cerrarSesionBodega()" style="background:#dc3545; padding:8px 15px;">Cerrar Sesión</button>
+                    </div>
+
+                    <!-- Filtro semana bodega -->
+                    <div class="card inline-form" style="border-left:5px solid #17a2b8;">
+                        <label><b>Semana:</b></label>
+                        <select id="bodega-semana-filter"><option value="TODAS">Todas</option></select>
+                        <label><b>Estado:</b></label>
+                        <select id="bodega-estado-filter">
+                            <option value="TODOS">Todos</option>
+                            <option value="PENDIENTE">🟡 Pendientes</option>
+                            <option value="VERIFICADO">🟢 Verificados</option>
+                            <option value="ALERTA">🔴 Con alertas</option>
+                        </select>
+                        <button type="button" id="btn-exportar-historial-bodega" class="export-btn" style="float:none;">📊 Exportar Historial</button>
+                    </div>
+
+                    <!-- Estadísticas rápidas -->
+                    <div class="bodega-stats" id="bodega-stats"></div>
+
+                    <!-- Lista de pedidos -->
+                    <div id="bodega-pedidos-container"></div>
+                </div>
+            </section>
+
         </main>
     </div>
 
+    <!-- Modal editar clase -->
     <div id="edit-schedule-modal" class="modal">
         <div class="modal-content">
             <span class="close-btn" data-modal="edit-schedule-modal">&times;</span>
             <h3 style="color:#0056b3;">Editar / Reagendar Clase</h3>
             <form id="edit-schedule-form">
                 <input type="hidden" id="edit-schedule-id">
-
                 <div style="background: #e9ecef; padding: 10px; border-radius: 6px; margin-bottom: 10px;">
                     <label><b>📅 Reagendamiento:</b></label><br>
                     <label style="font-size: 0.9em;">Nueva Fecha:</label>
@@ -361,23 +388,16 @@
                         <option value="505">Sala 505</option>
                     </select>
                 </div>
-
                 <div style="background: #fff3cd; padding: 10px; border-radius: 6px; border: 1px solid #ffeeba;">
                     <label><b>🔄 Reemplazo (Opcional):</b></label>
                     <p style="font-size: 0.8em; margin: 0 0 5px 0;">Seleccione solo si vendrá otro docente.</p>
-                    <select id="edit-schedule-reemplazo">
-                        <option value="">-- Sin Reemplazo (Mantiene Titular) --</option>
-                    </select>
+                    <select id="edit-schedule-reemplazo"><option value="">-- Sin Reemplazo (Mantiene Titular) --</option></select>
                 </div>
-
                 <button type="submit">Guardar Cambios</button>
             </form>
         </div>
     </div>
 
     <div id="print-area"></div>
-
-    <script src="script.js"></script>
 </body>
-
 </html>

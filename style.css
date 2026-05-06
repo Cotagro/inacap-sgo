@@ -1,62 +1,110 @@
-/* --- Estilos Generales --- */
-:root { 
-    --sala-500a-bg: #e6f7ff; --sala-500a-border: #91d5ff; --sala-500a-text: #000000;
-    --sala-500b-bg: #f6ffed; --sala-500b-border: #b7eb8f; --sala-500b-text: #000000;
-    --sala-502-bg: #fffbe6; --sala-502-border: #ffe58f; --sala-502-text: #000000;
-    --sala-503-bg: #fff0f6; --sala-503-border: #ffadd2; --sala-503-text: #000000;
-    --sala-504-bg: #f9f0ff; --sala-504-border: #d3adf7; --sala-504-text: #000000;
-    --sala-505-bg: #e6fffb; --sala-505-border: #87e8de; --sala-505-text: #000000;
+/* ==========================================
+   VARIABLES Y BASE
+   ========================================== */
+:root {
+    --sala-500a-bg: #e6f7ff; --sala-500a-border: #91d5ff;
+    --sala-500b-bg: #f6ffed; --sala-500b-border: #b7eb8f;
+    --sala-502-bg: #fffbe6;  --sala-502-border: #ffe58f;
+    --sala-503-bg: #fff0f6;  --sala-503-border: #ffadd2;
+    --sala-504-bg: #f9f0ff;  --sala-504-border: #d3adf7;
+    --sala-505-bg: #e6fffb;  --sala-505-border: #87e8de;
 }
 
-body { 
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
-    background-color: #f0f2f5; 
-    margin: 0; 
-    padding: 20px; 
-    color: #333; 
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background-color: #f0f2f5;
+    margin: 0;
+    padding: 20px;
+    color: #333;
 }
 
-.container { 
-    max-width: 1200px; /* Aumentado ligeramente para mejor espacio en tablas grandes */
-    margin: auto; 
-    background: #fff; 
-    border-radius: 12px; 
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); 
-    overflow: hidden; 
+.container {
+    max-width: 1200px;
+    margin: auto;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    overflow: hidden;
 }
 
-header { background-color: #0056b3; color: white; padding: 20px; text-align: center; }
+/* ==========================================
+   HEADER Y NAV
+   ========================================== */
+header {
+    background-color: #0056b3;
+    color: white;
+    padding: 20px;
+    text-align: center;
+}
 h1 { margin: 0; font-size: 1.8rem; }
 
-nav { display: flex; justify-content: center; gap: 10px; margin-top: 15px; flex-wrap: wrap; }
-nav button { background: transparent; border: 1px solid white; color: white; padding: 8px 15px; border-radius: 20px; cursor: pointer; transition: all 0.3s; }
+.sync-status {
+    display: inline-block;
+    margin-top: 8px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.85em;
+    font-weight: bold;
+    background: #ffc107;
+    color: #000;
+}
+
+nav {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 15px;
+    flex-wrap: wrap;
+}
+nav button {
+    background: transparent;
+    border: 1px solid white;
+    color: white;
+    padding: 7px 13px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-size: 13px;
+}
 nav button.active, nav button:hover { background: white; color: #0056b3; }
 
+/* ==========================================
+   LAYOUT PRINCIPAL
+   ========================================== */
 main { padding: 20px; }
 hr { margin: 20px 0; border: 0; border-top: 1px solid #e0e0e0; }
 
 section { display: none; }
 section.active-section { display: block; animation: fadeIn 0.3s ease-in-out; }
-
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
 h2, h3, h4 { color: #0056b3; border-bottom: 2px solid #f0f2f5; padding-bottom: 5px; margin-top: 0; }
 h4 { border: none; margin-bottom: 10px; color: #495057; }
-.card { background: #fafafa; border: 1px solid #e0e0e0; border-radius: 8px; padding: 20px; margin-bottom: 20px; }
 
-/* --- Config Grid (Columnas) --- */
-.config-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; }
+.card {
+    background: #fafafa;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
 
-/* --- Formularios y Botones --- */
+/* ==========================================
+   FORMULARIOS
+   ========================================== */
 form { display: flex; flex-direction: column; gap: 15px; }
 .inline-form { display: flex; flex-direction: row; align-items: center; gap: 10px; flex-wrap: wrap; }
 
-input[type="text"], input[type="number"], input[type="date"], input[type="search"], select { 
-    width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 14px;
+input[type="text"], input[type="number"], input[type="date"], input[type="search"], select {
+    width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px;
+    box-sizing: border-box; font-size: 14px;
 }
 .inline-form select, .inline-form input, .inline-form label { width: auto; flex: 1; }
 
-button { padding: 10px 20px; border: none; background-color: #0056b3; color: white; border-radius: 6px; cursor: pointer; font-size: 14px; transition: background-color 0.2s; }
+button {
+    padding: 10px 20px; border: none; background-color: #0056b3; color: white;
+    border-radius: 6px; cursor: pointer; font-size: 14px; transition: background-color 0.2s;
+}
 button:hover { background-color: #004494; }
 button[type="button"] { background-color: #6c757d; }
 button[type="button"]:hover { background-color: #5a6268; }
@@ -64,168 +112,232 @@ button[type="button"]:hover { background-color: #5a6268; }
 #print-btn, .export-btn { background-color: #28a745; color: white; }
 #print-btn:hover, .export-btn:hover { background-color: #218838; }
 .export-btn { float: right; margin-bottom: 15px; margin-left: 10px; }
-.copy-btn { background-color: #17a2b8; padding: 12px; flex-grow: 0.5; }
 
-/* --- Listas y Tablas --- */
+/* ==========================================
+   LISTAS
+   ========================================== */
 ul { list-style: none; padding: 0; margin: 0; }
-ul li { background: #fff; border-bottom: 1px solid #eee; padding: 8px 12px; display: flex; justify-content: space-between; align-items: center; }
+ul li {
+    background: #fff; border-bottom: 1px solid #eee;
+    padding: 8px 12px; display: flex; justify-content: space-between; align-items: center;
+}
 ul li:last-child { border-bottom: none; }
 
-/* CLASE CRUCIAL PARA LISTAS DE CONFIGURACIÓN */
-.scrollable-list {
-    max-height: 250px;
-    overflow-y: auto;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    background: #fff;
-}
+.scrollable-list { max-height: 250px; overflow-y: auto; border: 1px solid #ddd; border-radius: 6px; background: #fff; }
 
-.horario-item, .op-list-item { border: 1px solid #ccc; padding: 15px; border-radius: 8px; margin-bottom: 10px; background: white; position: relative; }
+/* ==========================================
+   HORARIO Y OPs
+   ========================================== */
+.horario-item, .op-list-item {
+    border: 1px solid #ccc; padding: 15px; border-radius: 8px;
+    margin-bottom: 10px; background: white; position: relative;
+}
 .actions { position: absolute; top: 10px; right: 10px; }
 .actions button { padding: 4px 8px; font-size: 12px; margin-left: 5px; }
 .edit-btn { background-color: #ffc107; color: #000; }
 .delete-btn { background-color: #dc3545; color: white; }
 
-/* --- Acordeón --- */
 .asignatura-group { margin-bottom: 15px; border-radius: 8px; overflow: hidden; border: 1px solid #e0e0e0; background: white; }
 .asignatura-header { background-color: #f8f9fa; padding: 15px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: background 0.2s; }
 .asignatura-header:hover { background-color: #e2e6ea; }
 .ops-list { padding: 15px; display: none; border-top: 1px solid #e0e0e0; }
 .ops-list.active { display: block; }
 
-/* --- Consolidado y Gestión Docente --- */
+/* ==========================================
+   TABLAS
+   ========================================== */
 .consolidado-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.95em; }
 .consolidado-table th, .consolidado-table td { border: 1px solid #ddd; padding: 10px; text-align: left; }
 .consolidado-table th { background-color: #f1f3f5; font-weight: 600; color: #495057; }
 .tag-reemplazo { background-color: #ffc107; color: #000; padding: 2px 6px; border-radius: 4px; font-size: 0.8em; font-weight: bold; margin-left: 5px; }
 
-/* --- Checkbox y Bloqueo --- */
+/* ==========================================
+   CHECKBOX Y CONFIG
+   ========================================== */
 .checkbox-container { display: flex; align-items: center; gap: 10px; background-color: #e9ecef; padding: 10px; border-radius: 6px; margin-top: 10px; }
 .checkbox-container input { width: auto; margin: 0; }
 
-#config-content-wrapper.locked > *:not(h3) { display: none; } 
-#config-content-wrapper.locked::before { content: '🔒 Sección Bloqueada. Ingrese clave en el menú.'; display: block; padding: 15px; background-color: #fff3cd; color: #856404; text-align: center; border-radius: 8px; margin-bottom: 15px;}
+#config-content-wrapper.locked > *:not(h3) { display: none; }
+#config-content-wrapper.locked::before {
+    content: '🔒 Sección Bloqueada. Ingrese clave en el menú.';
+    display: block; padding: 15px; background-color: #fff3cd; color: #856404;
+    text-align: center; border-radius: 8px; margin-bottom: 15px;
+}
 
-/* --- Modal --- */
+/* ==========================================
+   MODAL
+   ========================================== */
 .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); backdrop-filter: blur(2px); }
 .modal-content { background-color: #fefefe; margin: 10% auto; padding: 25px; border: 1px solid #888; width: 90%; max-width: 500px; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
 .close-btn { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; line-height: 20px; }
 .close-btn:hover { color: #000; }
 
-/* --- Calendario (FIX COLORES NEGROS) --- */
+/* ==========================================
+   CALENDARIO
+   ========================================== */
 .fc-event { border: 1px solid rgba(0,0,0,0.2) !important; cursor: pointer; box-shadow: 1px 1px 3px rgba(0,0,0,0.1); }
 .fc-event, .fc-event-main, .fc-event-title, .fc-event-time { color: #000000 !important; font-weight: 600 !important; font-size: 0.85em !important; }
-
 .fc-event.sala-500A { background-color: var(--sala-500a-bg) !important; border-left: 5px solid var(--sala-500a-border) !important; }
 .fc-event.sala-500B { background-color: var(--sala-500b-bg) !important; border-left: 5px solid var(--sala-500b-border) !important; }
-.fc-event.sala-502 { background-color: var(--sala-502-bg) !important; border-left: 5px solid var(--sala-502-border) !important; }
-.fc-event.sala-503 { background-color: var(--sala-503-bg) !important; border-left: 5px solid var(--sala-503-border) !important; }
-.fc-event.sala-504 { background-color: var(--sala-504-bg) !important; border-left: 5px solid var(--sala-504-border) !important; }
-.fc-event.sala-505 { background-color: var(--sala-505-bg) !important; border-left: 5px solid var(--sala-505-border) !important; }
+.fc-event.sala-502  { background-color: var(--sala-502-bg) !important;  border-left: 5px solid var(--sala-502-border) !important; }
+.fc-event.sala-503  { background-color: var(--sala-503-bg) !important;  border-left: 5px solid var(--sala-503-border) !important; }
+.fc-event.sala-504  { background-color: var(--sala-504-bg) !important;  border-left: 5px solid var(--sala-504-border) !important; }
+.fc-event.sala-505  { background-color: var(--sala-505-bg) !important;  border-left: 5px solid var(--sala-505-border) !important; }
 
-/* --- Estilos de Impresión (OPTIMIZADO PARA AHORRO DE PAPEL) --- */
+/* ==========================================
+   ETIQUETAS
+   ========================================== */
+.etiqueta-grupo { margin-bottom: 30px; }
+
+/* Etiqueta principal de canasta */
+.etiqueta-clase {
+    display: inline-block;
+    border: 2px solid #000;
+    border-radius: 6px;
+    padding: 10px 14px;
+    width: 200px;
+    font-family: Arial, sans-serif;
+    vertical-align: top;
+    margin: 8px;
+    background: white;
+    box-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+}
+.etiqueta-header { font-size: 8pt; font-weight: bold; color: #0056b3; border-bottom: 1px solid #ccc; padding-bottom: 3px; margin-bottom: 4px; text-align: center; }
+.etiqueta-semana { font-size: 8pt; text-align: center; color: #666; margin-bottom: 2px; }
+.etiqueta-asignatura { font-size: 10pt; font-weight: bold; text-align: center; color: #000; }
+.etiqueta-clase-num { font-size: 9pt; text-align: center; color: #333; }
+.etiqueta-receta { font-size: 9pt; font-weight: bold; text-align: center; color: #0056b3; margin: 4px 0; border-top: 1px dashed #ccc; padding-top: 3px; }
+.etiqueta-info { font-size: 7.5pt; color: #555; text-align: center; line-height: 1.4; }
+
+/* Grilla de etiquetas de ingredientes */
+.etiquetas-ingredientes-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.etiqueta-ingrediente {
+    border: 1.5px solid #333;
+    border-radius: 4px;
+    padding: 6px 10px;
+    width: 120px;
+    font-family: Arial, sans-serif;
+    background: white;
+    box-shadow: 1px 1px 3px rgba(0,0,0,0.1);
+}
+.ei-nombre { font-size: 9pt; font-weight: bold; color: #000; border-bottom: 1px solid #ddd; padding-bottom: 2px; margin-bottom: 3px; }
+.ei-cantidad { font-size: 12pt; font-weight: bold; color: #0056b3; text-align: center; margin-bottom: 2px; }
+.ei-clase { font-size: 7pt; color: #555; }
+.ei-sala { font-size: 7pt; color: #777; }
+
+/* ==========================================
+   BODEGA — STATS
+   ========================================== */
+.bodega-stats {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+.stat-card {
+    flex: 1;
+    min-width: 100px;
+    background: white;
+    border-radius: 10px;
+    padding: 15px;
+    text-align: center;
+    border: 2px solid #e0e0e0;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+}
+.stat-num { font-size: 2em; font-weight: bold; }
+.stat-label { font-size: 0.85em; color: #666; margin-top: 4px; }
+.stat-total { border-color: #6c757d; } .stat-total .stat-num { color: #6c757d; }
+.stat-pendiente { border-color: #ffc107; } .stat-pendiente .stat-num { color: #e09800; }
+.stat-ok { border-color: #28a745; } .stat-ok .stat-num { color: #28a745; }
+.stat-alerta { border-color: #dc3545; } .stat-alerta .stat-num { color: #dc3545; }
+
+/* ==========================================
+   BODEGA — PEDIDOS
+   ========================================== */
+.pedido-card {
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    padding: 15px;
+    margin-bottom: 15px;
+    background: white;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    transition: box-shadow 0.2s;
+}
+.pedido-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.12); }
+.pedido-alerta { border-color: #dc3545; border-left: 5px solid #dc3545; background: #fff8f8; }
+.pedido-ok { border-color: #28a745; border-left: 5px solid #28a745; background: #f8fff9; }
+.pedido-pendiente { border-color: #ffc107; border-left: 5px solid #ffc107; }
+
+.pedido-header { margin-bottom: 10px; }
+
+.badge { padding: 3px 8px; border-radius: 10px; font-size: 0.8em; font-weight: bold; }
+.badge-ok { background: #d4edda; color: #155724; }
+.badge-alerta { background: #f8d7da; color: #721c24; }
+.badge-pendiente { background: #fff3cd; color: #856404; }
+
+.ing-ok { background: #f0fff4; }
+.ing-falta { background: #fff5f5; }
+.ing-pendiente { background: #fffef0; }
+
+/* Vista profesor desde iPad */
+.prof-ing-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    background: white;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+/* ==========================================
+   IMPRESIÓN
+   ========================================== */
 @media print {
-    @page { 
-        size: A4 portrait; 
-        margin: 0.5cm; /* Margen de hoja mínimo */
-    } 
-    
+    @page { size: A4 portrait; margin: 0.5cm; }
+
     body * { visibility: hidden; }
     #print-area, #print-area * { visibility: visible; }
     #print-area { position: absolute; left: 0; top: 0; width: 100%; margin: 0; padding: 0; }
-    
-    .op-print-sheet { 
-        width: 100%; 
-        min-height: 100vh; 
-        page-break-after: always; 
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-        font-size: 10pt; /* Letra general un poco más pequeña */
-        position: relative; 
-        padding: 10px; /* Menos padding interno */
-        box-sizing: border-box;
-    }
 
-    /* Logo más pequeño para ahorrar espacio arriba */
-    .op-print-sheet img[alt="Logo"] {
-        max-height: 50px !important; 
-        width: auto !important;
-    }
+    /* Impresión de etiquetas */
+    .etiqueta-grupo { page-break-inside: avoid; }
+    .etiqueta-clase, .etiqueta-ingrediente { box-shadow: none !important; }
 
-    /* Cabecera compacta */
-    .op-print-sheet h2 { 
-        text-align: center; 
-        border-bottom: 2px solid #000; 
-        margin-bottom: 5px; 
-        font-size: 14pt; /* Título más pequeño */
-        color: #000; 
-        text-transform: uppercase;
-        padding-bottom: 2px;
-        margin-top: 0;
+    .op-print-sheet {
+        width: 100%; min-height: 100vh; page-break-after: always;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        font-size: 10pt; position: relative; padding: 10px; box-sizing: border-box;
     }
-    
+    .op-print-sheet img[alt="Logo"] { max-height: 50px !important; width: auto !important; }
+    .op-print-sheet h2 {
+        text-align: center; border-bottom: 2px solid #000; margin-bottom: 5px;
+        font-size: 14pt; color: #000; text-transform: uppercase; padding-bottom: 2px; margin-top: 0;
+    }
     .header-info { font-size: 9pt; }
     .header-info p { margin: 2px 0; line-height: 1.2; }
-    .header-info hr { margin: 4px 0; }
-    
-    /* --- TABLA COMPACTA (La clave del ahorro) --- */
-    .print-table { 
-        width: 100%; 
-        border-collapse: collapse; 
-        margin-top: 10px; 
-        font-size: 8pt; /* Letra de la tabla bien pequeña pero legible */
-    }
-    
-    .print-table th, .print-table td { 
-        border: 1px solid #000; 
-        padding: 2px 4px; /* Padding MUY reducido para que las filas sean finas */
-        text-align: left; 
-        vertical-align: middle; 
-        height: auto;
-    }
-    
-    .print-table th { 
-        background-color: #eee !important; 
-        -webkit-print-color-adjust: exact; 
-        text-align: center; 
-        font-weight: bold; 
-        font-size: 8.5pt;
-    }
-    
-    .col-check { width: 30px; text-align: center; } 
+    .print-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 8pt; }
+    .print-table th, .print-table td { border: 1px solid #000; padding: 2px 4px; text-align: left; vertical-align: middle; height: auto; }
+    .print-table th { background-color: #eee !important; -webkit-print-color-adjust: exact; text-align: center; font-weight: bold; font-size: 8.5pt; }
+    .col-check { width: 30px; text-align: center; }
     .col-encargado-header { text-transform: uppercase; letter-spacing: 0.5px; }
-
-    /* Evitar que las filas se corten a la mitad entre hojas */
     tr { page-break-inside: avoid; }
-
-    /* Firmas compactas al final */
-    .firmas-container { 
-        display: flex; 
-        justify-content: space-between; 
-        margin-top: 20px; 
-        border: 1px solid #000; 
-        padding: 5px; 
-        page-break-inside: avoid; 
-    }
+    .firmas-container { display: flex; justify-content: space-between; margin-top: 20px; border: 1px solid #000; padding: 5px; page-break-inside: avoid; }
     .firma-block { width: 48%; }
-    .firma-title { 
-        background: #eee; 
-        text-align: center; 
-        font-weight: bold; 
-        border: 1px solid #000; 
-        margin-bottom: 5px; 
-        padding: 2px; 
-        font-size: 9pt;
-        -webkit-print-color-adjust: exact; 
-    }
+    .firma-title { background: #eee; text-align: center; font-weight: bold; border: 1px solid #000; margin-bottom: 5px; padding: 2px; font-size: 9pt; -webkit-print-color-adjust: exact; }
     .firma-box-row { display: flex; justify-content: space-around; gap: 10px; }
-    .firma-line { 
-        height: 30px; /* Menos espacio para firmar */
-        border-bottom: 1px solid #000; 
-        margin-top: 15px; 
-        text-align: center; 
-        font-size: 8pt; 
-        padding-top: 15px; 
-        width: 100%; 
-        color: #666; 
-    }
+    .firma-line { height: 30px; border-bottom: 1px solid #000; margin-top: 15px; text-align: center; font-size: 8pt; padding-top: 15px; width: 100%; color: #666; }
+
+    /* Cuando se imprimen etiquetas, ocultar el resto */
+    .etiquetas-print-mode body * { visibility: hidden; }
+    .etiquetas-print-mode #etiquetas, .etiquetas-print-mode #etiquetas * { visibility: visible; }
 }
