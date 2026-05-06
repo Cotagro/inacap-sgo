@@ -679,13 +679,16 @@ document.getElementById('btn-generar-etiquetas')?.addEventListener('click', asyn
 
         // Generar QR después de insertar en DOM
         setTimeout(() => {
-            const canvas = document.getElementById(`qr-${c.id}`);
-            if (canvas && typeof QRCode !== 'undefined') {
-                QRCode.toCanvas(canvas, qrUrl, { width: 90, margin: 1 }, (err) => {
-                    if (err) console.error('QR error:', err);
-                });
-            }
-        }, 100);
+    const div = document.getElementById(`qr-${c.id}`);
+    if (div && typeof QRCode !== 'undefined') {
+        new QRCode(div, {
+            text: qrUrl,
+            width: 90,
+            height: 90,
+            correctLevel: QRCode.CorrectLevel.M
+        });
+    }
+}, 300);
     }
 
     document.getElementById('btn-imprimir-etiquetas').style.display = 'inline-block';
