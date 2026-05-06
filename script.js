@@ -653,7 +653,7 @@ document.getElementById('btn-generar-etiquetas')?.addEventListener('click', asyn
             <div class="etiqueta-info">Prof: ${prof.nombre}</div>
             <div class="etiqueta-info">Sala ${c.sala} | ${c.horario}</div>
             <div class="etiqueta-info">${formatDate(c.fecha)}</div>
-            <canvas class="qr-canvas" id="qr-${c.id}" style="margin-top:8px;"></canvas>
+            <div id="qr-${c.id}" style="margin-top:8px;"></div>
             <div style="font-size:7pt;color:#666;margin-top:2px;">Escanear para verificar pedido</div>
         `;
         wrapper.appendChild(etiquetaClase);
