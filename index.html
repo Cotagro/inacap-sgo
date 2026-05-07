@@ -27,9 +27,10 @@
                 <button data-section="consolidado">🛒 Consolidado</button>
                 <button data-section="etiquetas" style="border-color: #17a2b8; color: #17a2b8;">🏷️ Etiquetas</button>
                 <button data-section="bodega" style="border-color: #28a745; color: #28a745;">📦 Bodega</button>
+                <button data-section="stock" style="border-color: #fd7e14; color: #fd7e14;">📊 Stock</button>
             </nav>
         </header>
-
+ 
         <main>
             <!-- CONFIGURACIÓN -->
             <section id="configuracion">
@@ -130,7 +131,7 @@
                     </div>
                 </div>
             </section>
-
+ 
             <!-- INGREDIENTES -->
             <section id="ingredientes">
                 <h2>Base de Datos de Ingredientes</h2>
@@ -168,7 +169,7 @@
                     <ul id="ingredientes-db-list"></ul>
                 </div>
             </section>
-
+ 
             <!-- VER OPs -->
             <section id="ver-ops">
                 <h2>OPs Guardadas</h2>
@@ -177,7 +178,7 @@
                 </div>
                 <div id="op-viewer-container"></div>
             </section>
-
+ 
             <!-- PROGRAMACIÓN -->
             <section id="programacion">
                 <h2>Programar Clase</h2>
@@ -214,7 +215,7 @@
                     </form>
                 </div>
             </section>
-
+ 
             <!-- GESTIÓN DOCENTE -->
             <section id="gestion-docente">
                 <h2>Gestión Docente (Carga y Reemplazos)</h2>
@@ -242,7 +243,7 @@
                     <div id="gestion-docente-output"></div>
                 </div>
             </section>
-
+ 
             <!-- CALENDARIO -->
             <section id="calendario" class="active-section">
                 <h2>Calendario Visual</h2>
@@ -275,7 +276,7 @@
                     <div id="calendar-container"></div>
                 </div>
             </section>
-
+ 
             <!-- HORARIO -->
             <section id="horario">
                 <h2>Lista de Clases para Imprimir</h2>
@@ -298,7 +299,7 @@
                 </div>
                 <div id="horario-output"></div>
             </section>
-
+ 
             <!-- CONSOLIDADO -->
             <section id="consolidado">
                 <h2>Consolidado de Compras</h2>
@@ -314,7 +315,7 @@
                     <div id="consolidado-detalle"></div>
                 </div>
             </section>
-
+ 
             <!-- ETIQUETAS -->
             <section id="etiquetas">
                 <h2>🏷️ Generador de Etiquetas</h2>
@@ -331,11 +332,11 @@
                 </div>
                 <div id="etiquetas-preview"></div>
             </section>
-
+ 
             <!-- BODEGA -->
             <section id="bodega">
                 <h2>📦 Bodega — Monitor en Tiempo Real</h2>
-
+ 
                 <!-- Login bodega -->
                 <div id="bodega-login" class="card" style="max-width: 400px; margin: 0 auto; border-left: 5px solid #28a745;">
                     <h4>👤 Identificarse para despachar</h4>
@@ -344,7 +345,7 @@
                         <button type="button" id="btn-bodega-login" style="background:#28a745;">Entrar</button>
                     </div>
                 </div>
-
+ 
                 <div id="bodega-panel" style="display:none;">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
                         <div class="card" style="flex:1; margin:0 5px 0 0; border-left:5px solid #28a745; padding:10px;">
@@ -352,7 +353,7 @@
                         </div>
                         <button type="button" onclick="cerrarSesionBodega()" style="background:#dc3545; padding:8px 15px;">Cerrar Sesión</button>
                     </div>
-
+ 
                     <!-- Filtro semana bodega -->
                     <div class="card inline-form" style="border-left:5px solid #17a2b8;">
                         <label><b>Semana:</b></label>
@@ -366,18 +367,82 @@
                         </select>
                         <button type="button" id="btn-exportar-historial-bodega" class="export-btn" style="float:none;">📊 Exportar Historial</button>
                     </div>
-
+ 
                     <!-- Estadísticas rápidas -->
                     <div class="bodega-stats" id="bodega-stats"></div>
-
+ 
                     <!-- Lista de pedidos -->
                     <div id="bodega-pedidos-container"></div>
                 </div>
             </section>
-
+ 
+            <!-- STOCK -->
+            <section id="stock">
+                <h2>📊 Control de Stock en Bodega</h2>
+ 
+                <!-- Alertas pre-semana -->
+                <div id="stock-alertas"></div>
+ 
+                <!-- Ingreso de mercadería -->
+                <div class="card" style="border-left:5px solid #fd7e14;">
+                    <h4>➕ Ingresar Mercadería</h4>
+                    <div class="inline-form">
+                        <input type="text" id="stock-ing-nombre" list="stock-ing-datalist"
+                            placeholder="Buscar ingrediente o insumo..." style="flex:2;" autocomplete="off">
+                        <datalist id="stock-ing-datalist"></datalist>
+                        <input type="number" id="stock-ing-cantidad" placeholder="Cantidad" min="0" step="any" style="width:100px;">
+                        <select id="stock-ing-unidad" style="width:130px;">
+                            <option value="Kilo(s)">Kilo(s)</option>
+                            <option value="Litro(s)">Litro(s)</option>
+                            <option value="Unidad(es)">Unidad(es)</option>
+                            <option value="Paquete(s)">Paquete(s)</option>
+                            <option value="Bandeja(s)">Bandeja(s)</option>
+                            <option value="Tarro(s)">Tarro(s)</option>
+                            <option value="Bolsa(s)">Bolsa(s)</option>
+                            <option value="Caja(s)">Caja(s)</option>
+                        </select>
+                        <input type="text" id="stock-ing-nota" placeholder="Nota (ej: Proveedor X)" style="flex:1;">
+                        <button type="button" id="btn-stock-ingresar" style="background:#fd7e14;">📥 Registrar Ingreso</button>
+                    </div>
+                </div>
+ 
+                <!-- Filtros stock -->
+                <div class="card inline-form" style="border-left:5px solid #17a2b8;">
+                    <label><b>Semana comprometida:</b></label>
+                    <select id="stock-semana-filter">
+                        <option value="PROXIMA">Próxima semana</option>
+                        <option value="TODAS">Todas las semanas</option>
+                    </select>
+                    <label><b>Estado:</b></label>
+                    <select id="stock-estado-filter">
+                        <option value="TODOS">Todos</option>
+                        <option value="CRITICO">🔴 Críticos</option>
+                        <option value="BAJO">🟡 Stock bajo</option>
+                        <option value="OK">🟢 OK</option>
+                    </select>
+                    <button type="button" id="btn-stock-exportar" class="export-btn" style="float:none;">📊 Exportar Stock</button>
+                </div>
+ 
+                <!-- Tabla de stock actual -->
+                <div class="card">
+                    <h4>📦 Stock Actual</h4>
+                    <div id="stock-tabla-container"></div>
+                </div>
+ 
+                <!-- Historial de movimientos -->
+                <div class="card">
+                    <h4>📋 Historial de Movimientos</h4>
+                    <div class="inline-form" style="margin-bottom:10px;">
+                        <input type="text" id="stock-historial-search"
+                            placeholder="🔍 Buscar ingrediente..." style="max-width:300px;">
+                    </div>
+                    <div id="stock-historial-container"></div>
+                </div>
+            </section>
+ 
         </main>
     </div>
-
+ 
     <!-- Modal editar clase -->
     <div id="edit-schedule-modal" class="modal">
         <div class="modal-content">
@@ -414,7 +479,7 @@
             </form>
         </div>
     </div>
-
+ 
     <div id="print-area"></div>
 </body>
 </html>
