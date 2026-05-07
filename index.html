@@ -17,12 +17,13 @@
             <h1>Gestor de Órdenes de Pedido (OP) 👨‍🍳👩‍🍳</h1>
             <div id="sync-status" class="sync-status">🔄 Conectando...</div>
             <nav>
+                <button data-section="dashboard" class="active" style="border-color:#fff700; color:#fff700;">🏠 Dashboard</button>
                 <button data-section="configuracion">⚙️ Configuración 🔒</button>
                 <button data-section="ingredientes">🥦 BD Ingredientes</button>
                 <button data-section="ver-ops">📄 Ver OPs</button>
                 <button data-section="programacion">🗓️ Programar Clases</button>
                 <button data-section="gestion-docente" style="border-color: #ffc107; color: #ffc107;">👨‍🏫 Gestión Docente</button>
-                <button data-section="calendario" class="active">📅 Calendario</button>
+                <button data-section="calendario">📅 Calendario</button>
                 <button data-section="horario">📋 Lista Horario</button>
                 <button data-section="consolidado">🛒 Consolidado</button>
                 <button data-section="etiquetas" style="border-color: #17a2b8; color: #17a2b8;">🏷️ Etiquetas</button>
@@ -32,6 +33,11 @@
         </header>
  
         <main>
+            <!-- DASHBOARD -->
+            <section id="dashboard" class="active-section">
+                <div id="dashboard-container"></div>
+            </section>
+ 
             <!-- CONFIGURACIÓN -->
             <section id="configuracion">
                 <div id="config-content-wrapper">
@@ -245,7 +251,7 @@
             </section>
  
             <!-- CALENDARIO -->
-            <section id="calendario" class="active-section">
+            <section id="calendario">
                 <h2>Calendario Visual</h2>
                 <div class="card" style="background: #f8f9fa; border-left: 5px solid #0056b3; margin-bottom: 15px;">
                     <div class="inline-form" style="align-items: center; gap: 15px;">
