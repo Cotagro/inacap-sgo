@@ -8,6 +8,7 @@
     <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.14/index.global.min.js'></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <!-- Firebase -->
     <script type="module" src="script.js"></script>
 </head>
@@ -29,15 +30,16 @@
                 <button data-section="etiquetas" style="border-color: #17a2b8; color: #17a2b8;">🏷️ Etiquetas</button>
                 <button data-section="bodega" style="border-color: #28a745; color: #28a745;">📦 Bodega</button>
                 <button data-section="stock" style="border-color: #fd7e14; color: #fd7e14;">📊 Stock</button>
+                <button data-section="graficos" style="border-color: #e83e8c; color: #e83e8c;">📈 Gráficos</button>
             </nav>
         </header>
- 
+
         <main>
             <!-- DASHBOARD -->
             <section id="dashboard" class="active-section">
                 <div id="dashboard-container"></div>
             </section>
- 
+
             <!-- CONFIGURACIÓN -->
             <section id="configuracion">
                 <div id="config-content-wrapper">
@@ -137,7 +139,7 @@
                     </div>
                 </div>
             </section>
- 
+
             <!-- INGREDIENTES -->
             <section id="ingredientes">
                 <h2>Base de Datos de Ingredientes</h2>
@@ -175,7 +177,7 @@
                     <ul id="ingredientes-db-list"></ul>
                 </div>
             </section>
- 
+
             <!-- VER OPs -->
             <section id="ver-ops">
                 <h2>OPs Guardadas</h2>
@@ -184,7 +186,7 @@
                 </div>
                 <div id="op-viewer-container"></div>
             </section>
- 
+
             <!-- PROGRAMACIÓN -->
             <section id="programacion">
                 <h2>Programar Clase</h2>
@@ -221,7 +223,7 @@
                     </form>
                 </div>
             </section>
- 
+
             <!-- GESTIÓN DOCENTE -->
             <section id="gestion-docente">
                 <h2>Gestión Docente (Carga y Reemplazos)</h2>
@@ -249,7 +251,7 @@
                     <div id="gestion-docente-output"></div>
                 </div>
             </section>
- 
+
             <!-- CALENDARIO -->
             <section id="calendario">
                 <h2>Calendario Visual</h2>
@@ -282,7 +284,7 @@
                     <div id="calendar-container"></div>
                 </div>
             </section>
- 
+
             <!-- HORARIO -->
             <section id="horario">
                 <h2>Lista de Clases para Imprimir</h2>
@@ -305,7 +307,7 @@
                 </div>
                 <div id="horario-output"></div>
             </section>
- 
+
             <!-- CONSOLIDADO -->
             <section id="consolidado">
                 <h2>Consolidado de Compras</h2>
@@ -321,7 +323,7 @@
                     <div id="consolidado-detalle"></div>
                 </div>
             </section>
- 
+
             <!-- ETIQUETAS -->
             <section id="etiquetas">
                 <h2>🏷️ Generador de Etiquetas</h2>
@@ -338,11 +340,11 @@
                 </div>
                 <div id="etiquetas-preview"></div>
             </section>
- 
+
             <!-- BODEGA -->
             <section id="bodega">
                 <h2>📦 Bodega — Monitor en Tiempo Real</h2>
- 
+
                 <!-- Login bodega -->
                 <div id="bodega-login" class="card" style="max-width: 400px; margin: 0 auto; border-left: 5px solid #28a745;">
                     <h4>👤 Identificarse para despachar</h4>
@@ -351,7 +353,7 @@
                         <button type="button" id="btn-bodega-login" style="background:#28a745;">Entrar</button>
                     </div>
                 </div>
- 
+
                 <div id="bodega-panel" style="display:none;">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
                         <div class="card" style="flex:1; margin:0 5px 0 0; border-left:5px solid #28a745; padding:10px;">
@@ -359,7 +361,7 @@
                         </div>
                         <button type="button" onclick="cerrarSesionBodega()" style="background:#dc3545; padding:8px 15px;">Cerrar Sesión</button>
                     </div>
- 
+
                     <!-- Filtro semana bodega -->
                     <div class="card inline-form" style="border-left:5px solid #17a2b8;">
                         <label><b>Semana:</b></label>
@@ -373,22 +375,22 @@
                         </select>
                         <button type="button" id="btn-exportar-historial-bodega" class="export-btn" style="float:none;">📊 Exportar Historial</button>
                     </div>
- 
+
                     <!-- Estadísticas rápidas -->
                     <div class="bodega-stats" id="bodega-stats"></div>
- 
+
                     <!-- Lista de pedidos -->
                     <div id="bodega-pedidos-container"></div>
                 </div>
             </section>
- 
+
             <!-- STOCK -->
             <section id="stock">
                 <h2>📊 Control de Stock en Bodega</h2>
- 
+
                 <!-- Alertas pre-semana -->
                 <div id="stock-alertas"></div>
- 
+
                 <!-- Ingreso de mercadería -->
                 <div class="card" style="border-left:5px solid #fd7e14;">
                     <h4>➕ Ingresar Mercadería</h4>
@@ -411,7 +413,7 @@
                         <button type="button" id="btn-stock-ingresar" style="background:#fd7e14;">📥 Registrar Ingreso</button>
                     </div>
                 </div>
- 
+
                 <!-- Filtros stock -->
                 <div class="card inline-form" style="border-left:5px solid #17a2b8;">
                     <label><b>Semana comprometida:</b></label>
@@ -428,13 +430,13 @@
                     </select>
                     <button type="button" id="btn-stock-exportar" class="export-btn" style="float:none;">📊 Exportar Stock</button>
                 </div>
- 
+
                 <!-- Tabla de stock actual -->
                 <div class="card">
                     <h4>📦 Stock Actual</h4>
                     <div id="stock-tabla-container"></div>
                 </div>
- 
+
                 <!-- Historial de movimientos -->
                 <div class="card">
                     <h4>📋 Historial de Movimientos</h4>
@@ -445,10 +447,90 @@
                     <div id="stock-historial-container"></div>
                 </div>
             </section>
- 
+
+            <!-- GRÁFICOS -->
+            <section id="graficos">
+                <h2>📈 Análisis de Consumo</h2>
+
+                <!-- Filtros -->
+                <div class="card" style="border-left:5px solid #e83e8c;">
+                    <div class="inline-form">
+                        <div>
+                            <label style="font-weight:bold;font-size:0.85em;">📅 Semana inicio</label><br>
+                            <select id="graf-semana-inicio" style="min-width:140px;"></select>
+                        </div>
+                        <div>
+                            <label style="font-weight:bold;font-size:0.85em;">📅 Semana fin</label><br>
+                            <select id="graf-semana-fin" style="min-width:140px;"></select>
+                        </div>
+                        <div>
+                            <label style="font-weight:bold;font-size:0.85em;">🔍 Top ingredientes</label><br>
+                            <select id="graf-top-n" style="min-width:120px;">
+                                <option value="5">Top 5</option>
+                                <option value="10" selected>Top 10</option>
+                                <option value="20">Top 20</option>
+                                <option value="999">Todos</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="font-weight:bold;font-size:0.85em;">📦 Familia</label><br>
+                            <select id="graf-familia" style="min-width:160px;">
+                                <option value="">Todas las familias</option>
+                                <option value="LACTEOS">LACTEOS</option>
+                                <option value="SOPROLE">SOPROLE</option>
+                                <option value="PURATOS">PURATOS</option>
+                                <option value="HUEVOS">HUEVOS</option>
+                                <option value="INSUMOS">INSUMOS</option>
+                                <option value="ABARROTES">ABARROTES</option>
+                                <option value="LICORES">LICORES</option>
+                                <option value="FRUTAS Y VERDURAS">FRUTAS Y VERDURAS</option>
+                                <option value="PESCADOS Y MARISCOS">PESCADOS Y MARISCOS</option>
+                                <option value="PROTEINA">PROTEINA</option>
+                                <option value="CONGELADOS">CONGELADOS</option>
+                            </select>
+                        </div>
+                        <div style="align-self:flex-end;">
+                            <button type="button" id="btn-generar-graficos" style="background:#e83e8c;">📈 Generar</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Resumen rápido -->
+                <div id="graf-resumen" style="display:none;">
+                    <div id="graf-kpis" class="dash-cards" style="margin-bottom:20px;"></div>
+
+                    <!-- Gráfico consumo por semana -->
+                    <div class="card">
+                        <h4>📊 Consumo Total por Semana</h4>
+                        <canvas id="chart-semanas" height="100"></canvas>
+                    </div>
+
+                    <!-- Gráfico top ingredientes -->
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+                        <div class="card">
+                            <h4>🥇 Top Ingredientes por Cantidad</h4>
+                            <canvas id="chart-top-ings" height="200"></canvas>
+                        </div>
+                        <div class="card">
+                            <h4>🏷️ Consumo por Familia</h4>
+                            <canvas id="chart-familias" height="200"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Tabla detalle -->
+                    <div class="card">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+                            <h4 style="margin:0;">📋 Detalle Completo</h4>
+                            <button type="button" id="btn-exportar-graficos" class="export-btn" style="float:none;">📊 Exportar Excel</button>
+                        </div>
+                        <div id="graf-tabla"></div>
+                    </div>
+                </div>
+            </section>
+
         </main>
     </div>
- 
+
     <!-- Modal editar clase -->
     <div id="edit-schedule-modal" class="modal">
         <div class="modal-content">
@@ -485,7 +567,7 @@
             </form>
         </div>
     </div>
- 
+
     <div id="print-area"></div>
 </body>
 </html>
