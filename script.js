@@ -653,8 +653,8 @@ document.getElementById('btn-generar-etiquetas')?.addEventListener('click', asyn
             <div class="etiqueta-info">Prof: ${prof.nombre}</div>
             <div class="etiqueta-info">Sala ${c.sala} | ${c.horario}</div>
             <div class="etiqueta-info">${formatDate(c.fecha)}</div>
-            <div id="qr-${c.id}" style="margin-top:8px;"></div>
-            <div style="font-size:7pt;color:#666;margin-top:2px;">Escanear para verificar pedido</div>
+            <div id="qr-${c.id}" style="display:flex;justify-content:center;margin-top:10px;"></div>
+            <div style="font-size:7pt;color:#666;margin-top:4px;text-align:center;">Escanear para verificar pedido</div>
         `;
         wrapper.appendChild(etiquetaClase);
 
@@ -679,16 +679,16 @@ document.getElementById('btn-generar-etiquetas')?.addEventListener('click', asyn
 
         // Generar QR después de insertar en DOM
         setTimeout(() => {
-    const div = document.getElementById(`qr-${c.id}`);
-    if (div && typeof QRCode !== 'undefined') {
-        new QRCode(div, {
-            text: qrUrl,
-            width: 90,
-            height: 90,
-            correctLevel: QRCode.CorrectLevel.M
-        });
-    }
-}, 300);
+            const div = document.getElementById(`qr-${c.id}`);
+            if (div && typeof QRCode !== 'undefined') {
+                new QRCode(div, {
+                    text: qrUrl,
+                    width: 130,
+                    height: 130,
+                    correctLevel: QRCode.CorrectLevel.M
+                });
+            }
+        }, 300);
     }
 
     document.getElementById('btn-imprimir-etiquetas').style.display = 'inline-block';
@@ -789,11 +789,13 @@ async function renderBodegaPedidos() {
         const prof = profs.find(p => p.id === d.profesorId);
         const tieneFaltante = (d.ingredientes || []).some(i => i.estado === 'FALTA');
         const todoVerificado = (d.ingredientes || []).length > 0 && (d.ingredientes || []).every(i => i.estado);
-        const estadoBadge = tieneFaltante
-            ? '<span class="badge badge-alerta">🔴 CON FALTANTES</span>'
-            : todoVerificado
-                ? '<span class="badge badge-ok">🟢 VERIFICADO</span>'
-                : '<span class="badge badge-pendiente">🟡 PENDIENTE</span>';
+        // Usar estadoDespacho guardado o calcularlo
+        const estadoActual = d.estadoDespacho ||
+            (tieneFaltante ? 'CON_FALTANTE' : todoVerificado ? 'ENTREGADO' : 'PENDIENTE');
+        const estadoBadge =
+            estadoActual === 'CON_FALTANTE' ? '<span class="badge badge-alerta">🔴 CON FALTANTES</span>'
+            : estadoActual === 'ENTREGADO'  ? '<span class="badge badge-entregado">🟢 ENTREGADO</span>'
+            : '<span class="badge badge-pendiente">🟡 PENDIENTE</span>';
 
         const escaneoTime = d.timestampEscaneo ? new Date(d.timestampEscaneo).toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' }) : '--';
 
@@ -816,7 +818,7 @@ async function renderBodegaPedidos() {
         ).join('');
 
         const card = document.createElement('div');
-        card.className = `pedido-card ${tieneFaltante ? 'pedido-alerta' : todoVerificado ? 'pedido-ok' : 'pedido-pendiente'}`;
+        card.className = `pedido-card ${estadoActual === 'CON_FALTANTE' ? 'pedido-alerta' : estadoActual === 'ENTREGADO' ? 'pedido-ok' : 'pedido-pendiente'}`;
         card.innerHTML = `
             <div class="pedido-header">
                 <div>
@@ -844,10 +846,14 @@ window.marcarIngrediente = async (despachoId, ingId, estado) => {
     if (!despacho) return;
     const ings = (despacho.ingredientes || []).map(i => i.id === ingId ? { ...i, estado } : i);
     const todosVerificados = ings.every(i => i.estado);
+    const tieneFaltante = ings.some(i => i.estado === 'FALTA');
+    // ENTREGADO = todos marcados y ninguno falta | CON_FALTANTE = tiene faltantes | PENDIENTE = sin marcar
+    const estadoDespacho = !todosVerificados ? 'PENDIENTE' : tieneFaltante ? 'CON_FALTANTE' : 'ENTREGADO';
     await fsUpdate('despachos', despachoId, {
         ingredientes: ings,
         verificado: todosVerificados,
-        operador: bodegaOperador,
+        estadoDespacho,
+        operador: bodegaOperador || despacho.operador || 'Profesor',
         timestampVerificacion: Date.now()
     });
 };
