@@ -9,7 +9,7 @@
     --sala-504-bg: #f9f0ff;  --sala-504-border: #d3adf7;
     --sala-505-bg: #e6fffb;  --sala-505-border: #87e8de;
 }
-
+ 
 body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     background-color: #f0f2f5;
@@ -17,7 +17,7 @@ body {
     padding: 20px;
     color: #333;
 }
-
+ 
 .container {
     max-width: 1200px;
     margin: auto;
@@ -26,7 +26,7 @@ body {
     box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     overflow: hidden;
 }
-
+ 
 /* ==========================================
    HEADER Y NAV
    ========================================== */
@@ -37,7 +37,7 @@ header {
     text-align: center;
 }
 h1 { margin: 0; font-size: 1.8rem; }
-
+ 
 .sync-status {
     display: inline-block;
     margin-top: 8px;
@@ -48,7 +48,7 @@ h1 { margin: 0; font-size: 1.8rem; }
     background: #ffc107;
     color: #000;
 }
-
+ 
 nav {
     display: flex;
     justify-content: center;
@@ -67,20 +67,20 @@ nav button {
     font-size: 13px;
 }
 nav button.active, nav button:hover { background: white; color: #0056b3; }
-
+ 
 /* ==========================================
    LAYOUT PRINCIPAL
    ========================================== */
 main { padding: 20px; }
 hr { margin: 20px 0; border: 0; border-top: 1px solid #e0e0e0; }
-
+ 
 section { display: none; }
 section.active-section { display: block; animation: fadeIn 0.3s ease-in-out; }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
+ 
 h2, h3, h4 { color: #0056b3; border-bottom: 2px solid #f0f2f5; padding-bottom: 5px; margin-top: 0; }
 h4 { border: none; margin-bottom: 10px; color: #495057; }
-
+ 
 .card {
     background: #fafafa;
     border: 1px solid #e0e0e0;
@@ -88,19 +88,19 @@ h4 { border: none; margin-bottom: 10px; color: #495057; }
     padding: 20px;
     margin-bottom: 20px;
 }
-
+ 
 /* ==========================================
    FORMULARIOS
    ========================================== */
 form { display: flex; flex-direction: column; gap: 15px; }
 .inline-form { display: flex; flex-direction: row; align-items: center; gap: 10px; flex-wrap: wrap; }
-
+ 
 input[type="text"], input[type="number"], input[type="date"], input[type="search"], select {
     width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px;
     box-sizing: border-box; font-size: 14px;
 }
 .inline-form select, .inline-form input, .inline-form label { width: auto; flex: 1; }
-
+ 
 button {
     padding: 10px 20px; border: none; background-color: #0056b3; color: white;
     border-radius: 6px; cursor: pointer; font-size: 14px; transition: background-color 0.2s;
@@ -108,13 +108,13 @@ button {
 button:hover { background-color: #004494; }
 button[type="button"] { background-color: #6c757d; }
 button[type="button"]:hover { background-color: #5a6268; }
-
+ 
 #print-btn, .export-btn { background-color: #28a745; color: white; }
 #print-btn:hover, .export-btn:hover { background-color: #218838; }
 #print-panol-btn { background-color: #6f42c1; color: white; }
 #print-panol-btn:hover { background-color: #5a32a3; }
 .export-btn { float: right; margin-bottom: 15px; margin-left: 10px; }
-
+ 
 /* ==========================================
    LISTAS
    ========================================== */
@@ -124,9 +124,9 @@ ul li {
     padding: 8px 12px; display: flex; justify-content: space-between; align-items: center;
 }
 ul li:last-child { border-bottom: none; }
-
+ 
 .scrollable-list { max-height: 250px; overflow-y: auto; border: 1px solid #ddd; border-radius: 6px; background: #fff; }
-
+ 
 /* ==========================================
    HORARIO Y OPs
    ========================================== */
@@ -138,13 +138,13 @@ ul li:last-child { border-bottom: none; }
 .actions button { padding: 4px 8px; font-size: 12px; margin-left: 5px; }
 .edit-btn { background-color: #ffc107; color: #000; }
 .delete-btn { background-color: #dc3545; color: white; }
-
+ 
 .asignatura-group { margin-bottom: 15px; border-radius: 8px; overflow: hidden; border: 1px solid #e0e0e0; background: white; }
 .asignatura-header { background-color: #f8f9fa; padding: 15px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: background 0.2s; }
 .asignatura-header:hover { background-color: #e2e6ea; }
 .ops-list { padding: 15px; display: none; border-top: 1px solid #e0e0e0; }
 .ops-list.active { display: block; }
-
+ 
 /* ==========================================
    TABLAS
    ========================================== */
@@ -152,20 +152,20 @@ ul li:last-child { border-bottom: none; }
 .consolidado-table th, .consolidado-table td { border: 1px solid #ddd; padding: 10px; text-align: left; }
 .consolidado-table th { background-color: #f1f3f5; font-weight: 600; color: #495057; }
 .tag-reemplazo { background-color: #ffc107; color: #000; padding: 2px 6px; border-radius: 4px; font-size: 0.8em; font-weight: bold; margin-left: 5px; }
-
+ 
 /* ==========================================
    CHECKBOX Y CONFIG
    ========================================== */
 .checkbox-container { display: flex; align-items: center; gap: 10px; background-color: #e9ecef; padding: 10px; border-radius: 6px; margin-top: 10px; }
 .checkbox-container input { width: auto; margin: 0; }
-
+ 
 #config-content-wrapper.locked > *:not(h3) { display: none; }
 #config-content-wrapper.locked::before {
     content: '🔒 Sección Bloqueada. Ingrese clave en el menú.';
     display: block; padding: 15px; background-color: #fff3cd; color: #856404;
     text-align: center; border-radius: 8px; margin-bottom: 15px;
 }
-
+ 
 /* ==========================================
    MODAL
    ========================================== */
@@ -173,7 +173,7 @@ ul li:last-child { border-bottom: none; }
 .modal-content { background-color: #fefefe; margin: 10% auto; padding: 25px; border: 1px solid #888; width: 90%; max-width: 500px; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
 .close-btn { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; line-height: 20px; }
 .close-btn:hover { color: #000; }
-
+ 
 /* ==========================================
    CALENDARIO
    ========================================== */
@@ -185,12 +185,12 @@ ul li:last-child { border-bottom: none; }
 .fc-event.sala-503  { background-color: var(--sala-503-bg) !important;  border-left: 5px solid var(--sala-503-border) !important; }
 .fc-event.sala-504  { background-color: var(--sala-504-bg) !important;  border-left: 5px solid var(--sala-504-border) !important; }
 .fc-event.sala-505  { background-color: var(--sala-505-bg) !important;  border-left: 5px solid var(--sala-505-border) !important; }
-
+ 
 /* ==========================================
    ETIQUETAS
    ========================================== */
 .etiqueta-grupo { margin-bottom: 30px; }
-
+ 
 /* Etiqueta principal de canasta */
 .etiqueta-clase {
     display: inline-block;
@@ -211,7 +211,7 @@ ul li:last-child { border-bottom: none; }
 .etiqueta-clase-num { font-size: 9pt; text-align: center; color: #333; }
 .etiqueta-receta { font-size: 9pt; font-weight: bold; text-align: center; color: #0056b3; margin: 4px 0; border-top: 1px dashed #ccc; padding-top: 3px; }
 .etiqueta-info { font-size: 7.5pt; color: #555; text-align: center; line-height: 1.4; }
-
+ 
 /* Grilla de etiquetas de ingredientes */
 .etiquetas-ingredientes-grid {
     display: flex;
@@ -219,7 +219,7 @@ ul li:last-child { border-bottom: none; }
     gap: 8px;
     margin-top: 10px;
 }
-
+ 
 .etiqueta-ingrediente {
     border: 1.5px solid #333;
     border-radius: 4px;
@@ -233,7 +233,7 @@ ul li:last-child { border-bottom: none; }
 .ei-cantidad { font-size: 12pt; font-weight: bold; color: #0056b3; text-align: center; margin-bottom: 2px; }
 .ei-clase { font-size: 7pt; color: #555; }
 .ei-sala { font-size: 7pt; color: #777; }
-
+ 
 /* ==========================================
    BODEGA — STATS
    ========================================== */
@@ -259,7 +259,7 @@ ul li:last-child { border-bottom: none; }
 .stat-pendiente { border-color: #ffc107; } .stat-pendiente .stat-num { color: #e09800; }
 .stat-ok { border-color: #28a745; } .stat-ok .stat-num { color: #28a745; }
 .stat-alerta { border-color: #dc3545; } .stat-alerta .stat-num { color: #dc3545; }
-
+ 
 /* ==========================================
    BODEGA — PEDIDOS
    ========================================== */
@@ -276,19 +276,19 @@ ul li:last-child { border-bottom: none; }
 .pedido-alerta { border-color: #dc3545; border-left: 5px solid #dc3545; background: #fff8f8; }
 .pedido-ok { border-color: #28a745; border-left: 5px solid #28a745; background: #f8fff9; }
 .pedido-pendiente { border-color: #ffc107; border-left: 5px solid #ffc107; }
-
+ 
 .pedido-header { margin-bottom: 10px; }
-
+ 
 .badge { padding: 3px 8px; border-radius: 10px; font-size: 0.8em; font-weight: bold; }
 .badge-ok { background: #d4edda; color: #155724; }
 .badge-entregado { background: #d4edda; color: #155724; }
 .badge-alerta { background: #f8d7da; color: #721c24; }
 .badge-pendiente { background: #fff3cd; color: #856404; }
-
+ 
 .ing-ok { background: #f0fff4; }
 .ing-falta { background: #fff5f5; }
 .ing-pendiente { background: #fffef0; }
-
+ 
 /* Vista profesor desde iPad */
 .prof-ing-item {
     display: flex;
@@ -302,27 +302,45 @@ ul li:last-child { border-bottom: none; }
     flex-wrap: wrap;
     gap: 8px;
 }
-
+ 
+/* ==========================================
+   STOCK
+   ========================================== */
+#stock .consolidado-table td { vertical-align: middle; }
+ 
+.stock-nivel-bar {
+    background: #e9ecef;
+    border-radius: 4px;
+    height: 8px;
+    overflow: hidden;
+    min-width: 80px;
+}
+.stock-nivel-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.4s ease;
+}
+ 
 /* ==========================================
    IMPRESIÓN — OPTIMIZADO ZEBRA/BROTHER
    ========================================== */
 @media print {
     @page { size: A4 portrait; margin: 0.5cm; }
-
+ 
     body * { visibility: hidden; }
     #print-area, #print-area * { visibility: visible; }
     #print-area { position: absolute; left: 0; top: 0; width: 100%; margin: 0; padding: 0; }
-
+ 
     /* Etiquetas — optimizado para Zebra */
     #etiquetas-preview, #etiquetas-preview * { visibility: visible; }
     #etiquetas-preview { position: absolute; left: 0; top: 0; width: 100%; }
-
+ 
     .etiqueta-grupo {
         page-break-inside: avoid;
         margin-bottom: 20px;
     }
     .etiqueta-grupo h4 { display: none; } /* Ocultar título en impresión */
-
+ 
     .etiqueta-clase {
         box-shadow: none !important;
         border: 2px solid #000 !important;
@@ -331,14 +349,14 @@ ul li:last-child { border-bottom: none; }
         width: 200px !important;
         page-break-inside: avoid;
     }
-
+ 
     .etiquetas-ingredientes-grid {
         display: flex;
         flex-wrap: wrap;
         gap: 4px;
         margin-top: 8px;
     }
-
+ 
     .etiqueta-ingrediente {
         box-shadow: none !important;
         border: 1.5px solid #000 !important;
@@ -347,19 +365,19 @@ ul li:last-child { border-bottom: none; }
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
     }
-
+ 
     .ei-cantidad {
         font-size: 14pt !important;
         font-weight: bold !important;
         color: #000 !important;
     }
-
+ 
     /* QR visible en impresión */
     .etiqueta-clase img, .etiqueta-clase canvas {
         display: block !important;
         margin: 0 auto !important;
     }
-
+ 
     .op-print-sheet {
         width: 100%; min-height: 100vh; page-break-after: always;
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
