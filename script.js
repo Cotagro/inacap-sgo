@@ -322,28 +322,62 @@ document.getElementById('btn-copy-op')?.addEventListener('click', async () => {
 // ==========================================
 // CALENDARIO
 // ==========================================
-async function renderCalendarioFiltroProfesor() {
-    const sel = document.getElementById('calendario-filtro-profesor');
-    if (!sel) return;
-    const profesores = await fsGetAll('profesores');
-    profesores.sort((a, b) => a.nombre.localeCompare(b.nombre));
-    sel.innerHTML = '<option value="">— Todos los profesores —</option>';
-    profesores.forEach(p => sel.innerHTML += `<option value="${p.id}">${p.nombre}</option>`);
+async function renderCalendarioFiltros() {
+    // Llenar select profesores
+    const selProf = document.getElementById('calendario-filtro-profesor');
+    if (selProf) {
+        const profesores = await fsGetAll('profesores');
+        profesores.sort((a, b) => a.nombre.localeCompare(b.nombre));
+        const valProf = selProf.value;
+        selProf.innerHTML = '<option value="">— Todos los profesores —</option>';
+        profesores.forEach(p => selProf.innerHTML += `<option value="${p.id}">${p.nombre}</option>`);
+        if (valProf) selProf.value = valProf;
+    }
+    // Llenar select salas (fijo)
+    const selSala = document.getElementById('calendario-filtro-sala');
+    if (selSala && selSala.options.length <= 1) {
+        ['500A','500B','502','503','504','505'].forEach(s =>
+            selSala.innerHTML += `<option value="${s}">Sala ${s}</option>`
+        );
+    }
+    // Llenar select asignaturas
+    const selAsig = document.getElementById('calendario-filtro-asignatura');
+    if (selAsig) {
+        const asignaturas = await fsGetAll('asignaturas');
+        asignaturas.sort((a, b) => a.nombre.localeCompare(b.nombre));
+        const valAsig = selAsig.value;
+        selAsig.innerHTML = '<option value="">— Todas las asignaturas —</option>';
+        asignaturas.forEach(a => selAsig.innerHTML += `<option value="${a.id}">${a.nombre}</option>`);
+        if (valAsig) selAsig.value = valAsig;
+    }
 }
 
+// Alias para compatibilidad
+async function renderCalendarioFiltroProfesor() { await renderCalendarioFiltros(); }
+
 document.getElementById('calendario-filtro-profesor')?.addEventListener('change', () => renderCalendar());
+document.getElementById('calendario-filtro-sala')?.addEventListener('change', () => renderCalendar());
+document.getElementById('calendario-filtro-asignatura')?.addEventListener('change', () => renderCalendar());
 document.getElementById('btn-limpiar-filtro-cal')?.addEventListener('click', () => {
     document.getElementById('calendario-filtro-profesor').value = '';
+    document.getElementById('calendario-filtro-sala').value = '';
+    document.getElementById('calendario-filtro-asignatura').value = '';
     renderCalendar();
 });
 
 async function renderCalendar() {
-    const filtroProf = document.getElementById('calendario-filtro-profesor')?.value || '';
+    const filtroProf  = document.getElementById('calendario-filtro-profesor')?.value  || '';
+    const filtroSala  = document.getElementById('calendario-filtro-sala')?.value       || '';
+    const filtroAsig  = document.getElementById('calendario-filtro-asignatura')?.value || '';
+
     let eventsData = await fsGetAll('horario');
-    if (filtroProf) {
-        eventsData = eventsData.filter(e => e.profesorId === filtroProf || e.reemplazoId === filtroProf);
-    }
+
+    if (filtroProf) eventsData = eventsData.filter(e => e.profesorId === filtroProf || e.reemplazoId === filtroProf);
+    if (filtroSala) eventsData = eventsData.filter(e => e.sala === filtroSala);
+    if (filtroAsig) eventsData = eventsData.filter(e => e.asignaturaId === filtroAsig);
+
     const [asigs, profs, ops] = await Promise.all([fsGetAll('asignaturas'), fsGetAll('profesores'), fsGetAll('ops')]);
+
     const events = eventsData.map(ev => {
         const asigName = asigs.find(a => a.id === ev.asignaturaId)?.nombre || 'Clase';
         const op = ops.find(o => o.asignaturaId === ev.asignaturaId && o.numeroClase === ev.clase);
@@ -365,6 +399,7 @@ async function renderCalendar() {
             extendedProps: { profesor: profName, sala: ev.sala, horario: ev.horario, receta, claseNum: ev.clase, asignatura: asigName }
         };
     });
+
     const el = document.getElementById('calendar-container');
     if (!el) return;
     if (calendar) calendar.destroy();
@@ -377,7 +412,7 @@ async function renderCalendar() {
         }
     });
     calendar.render();
-    await renderCalendarioFiltroProfesor();
+    await renderCalendarioFiltros();
 }
 
 // ==========================================
@@ -1357,9 +1392,17 @@ window.exportarExcelAsignatura = async (asigId) => {
 };
 
 // ==========================================
-// IMPRESIÓN OPs
+// IMPRESIÓN OPs (solo ingredientes)
 // ==========================================
 window.imprimirOps = async () => {
+    await generarImpresion('op');
+};
+
+window.imprimirPanol = async () => {
+    await generarImpresion('panol');
+};
+
+async function generarImpresion(modo) {
     try {
         const semanaVal = document.getElementById('semana-filter').value;
         const diasChecks = [...document.querySelectorAll('#dias-filter-container input:checked')].map(cb => parseInt(cb.value));
@@ -1367,63 +1410,158 @@ window.imprimirOps = async () => {
         if (semanaVal !== 'TODAS') clases = clases.filter(c => c.semana === parseInt(semanaVal));
         if (diasChecks.length > 0) clases = clases.filter(c => diasChecks.includes(new Date(c.fecha + 'T12:00:00').getDay()));
         if (clases.length === 0) { alert('No hay clases visibles para imprimir.'); return; }
+
         const area = document.getElementById('print-area');
         area.innerHTML = '';
         const [profs, asigs, ops] = await Promise.all([fsGetAll('profesores'), fsGetAll('asignaturas'), fsGetAll('ops')]);
+
         for (const c of clases) {
             const asig = asigs.find(a => a.id === c.asignaturaId);
             const prof = profs.find(p => p.id === c.profesorId);
             const op = ops.find(o => o.asignaturaId === c.asignaturaId && o.numeroClase === c.clase);
             if (!asig || !op) continue;
-            let infoProfesor = prof?.nombre;
+
+            let infoProfesor = prof?.nombre || 'N/A';
             if (c.reemplazoId) {
                 const r = profs.find(p => p.id === c.reemplazoId)?.nombre;
                 infoProfesor = `${prof?.nombre} (Reemplazo: ${r})`;
             }
-            let contenido = '';
-            if (op.sinPedido) {
-                contenido = '<div style="padding:20px;text-align:center;border:1px solid #000;margin-top:20px;"><h3>CLASE TEÓRICA - SIN PEDIDO</h3></div>';
-            } else {
-                const ingredientesOrdenados = [...op.ingredientes].sort((a, b) => a.nombre.localeCompare(b.nombre));
-                const filasIng = ingredientesOrdenados.map(ing => `
-                    <tr><td class="col-check"></td><td class="col-check"></td>
-                    <td>${ing.nombre}</td>
-                    <td style="text-align:center;">${ing.cantidad} ${ing.unidad}</td></tr>`).join('');
-                const tablaIng = `<table class="print-table"><thead><tr><th colspan="2" class="col-encargado-header">ENCARGADO</th><th rowspan="2">Ingrediente</th><th rowspan="2">Cantidad</th></tr><tr><th style="font-size:8pt">Armado</th><th style="font-size:8pt">Superv.</th></tr></thead><tbody>${filasIng}</tbody></table>`;
-                let filasPanol = (op.utensilios || []).map(u => `<tr><td>${u.nombre}</td><td style="text-align:center;">${u.cantidad}</td></tr>`).join('');
-                for (let i = 0; i < 5; i++) filasPanol += '<tr><td style="height:20px;"></td><td></td></tr>';
-                const tablaPanolHTML = `<table class="print-table" style="width:100%;"><thead><tr><th>Utensilio (Pañol)</th><th style="width:30px;">Cant.</th></tr></thead><tbody>${filasPanol}</tbody></table>`;
-                const filasVajilla = LISTA_VAJILLA.map(v => `<tr><td style="padding:1px 4px;">${v}</td><td style="border:1px solid #000;width:30px;"></td></tr>`).join('');
-                const tablaVajillaHTML = `<table class="print-table" style="width:100%;"><thead><tr><th>Vajilla y Montaje</th><th style="width:30px;">Cant.</th></tr></thead><tbody>${filasVajilla}</tbody></table>`;
-                const bloqueInferior = `<div style="margin-top:10px;"><strong>PAÑOL, UTENSILIOS Y VAJILLA</strong> (Encargado: ${op.docentePanol || '______________'})<div style="display:flex;gap:10px;align-items:flex-start;margin-top:5px;"><div style="flex:1;">${tablaPanolHTML}</div><div style="flex:1;">${tablaVajillaHTML}</div></div></div>`;
-                contenido = tablaIng + bloqueInferior;
-            }
+
             const page = document.createElement('div');
             page.className = 'op-print-sheet';
             page.style.position = 'relative';
-            page.innerHTML = `
+
+            const headerHTML = `
                 <img src="inacap_logo.png" alt="Logo" style="position:absolute;top:0;right:0;max-height:50px;width:auto;">
                 <div class="print-header" style="text-align:center;margin-top:5px;">
-                    <h2 style="margin:0;text-transform:uppercase;">ORDEN DE PEDIDO - SEMANA ${c.semana}</h2>
+                    <h2 style="margin:0;text-transform:uppercase;">
+                        ${modo === 'op' ? 'ORDEN DE PEDIDO' : 'PAÑOL, UTENSILIOS Y VAJILLA'} — SEMANA ${c.semana}
+                    </h2>
                     <hr style="border:1px solid #000;margin-top:5px;">
                     <div class="header-info" style="text-align:left;margin-top:5px;">
-                        <p><strong>Asignatura:</strong> ${asig.nombre}</p>
-                        <p><strong>Clase N° ${c.clase}:</strong> ${op.nombreReceta}</p>
-                        <hr style="border-top:1px solid #ccc;margin:5px 0;">
-                        <p><strong>Profesor:</strong> ${infoProfesor} | <strong>Sala:</strong> ${c.sala}</p>
-                        <p><strong>Fecha:</strong> ${formatDate(c.fecha)} | <strong>Horario:</strong> ${c.horario}</p>
+                        <p><strong>Asignatura:</strong> ${asig.nombre} &nbsp;|&nbsp; <strong>Clase N° ${c.clase}:</strong> ${op.sinPedido ? 'Clase Teórica' : op.nombreReceta}</p>
+                        <p><strong>Profesor:</strong> ${infoProfesor} &nbsp;|&nbsp; <strong>Sala:</strong> ${c.sala} &nbsp;|&nbsp; <strong>Fecha:</strong> ${formatDate(c.fecha)} &nbsp;|&nbsp; <strong>Horario:</strong> ${c.horario}</p>
                     </div>
-                </div>
-                ${contenido}
-                <div class="firmas-container" style="margin-top:20px;">
-                    <div class="firma-block"><div class="firma-title">ENTREGA</div><div class="firma-box-row"><div class="firma-line">Firma Docente</div><div class="firma-line">Firma Pañol</div></div></div>
-                    <div class="firma-block"><div class="firma-title">DEVOLUCIÓN</div><div class="firma-box-row"><div class="firma-line">Firma Docente</div><div class="firma-line">Firma Pañol</div></div></div>
                 </div>`;
+
+            let contenido = '';
+
+            if (op.sinPedido) {
+                contenido = '<div style="padding:20px;text-align:center;border:1px solid #000;margin-top:20px;"><h3>CLASE TEÓRICA - SIN PEDIDO</h3></div>';
+            } else if (modo === 'op') {
+                // ——— HOJA DE OP: Solo ingredientes ———
+                const ingredientesOrdenados = [...op.ingredientes].sort((a, b) => a.nombre.localeCompare(b.nombre));
+                const filasIng = ingredientesOrdenados.map(ing => `
+                    <tr>
+                        <td class="col-check"></td>
+                        <td class="col-check"></td>
+                        <td>${ing.nombre}</td>
+                        <td style="text-align:center;">${ing.cantidad} ${ing.unidad}</td>
+                    </tr>`).join('');
+                contenido = `
+                    <table class="print-table" style="margin-top:12px;">
+                        <thead>
+                            <tr>
+                                <th colspan="2" class="col-encargado-header">ENCARGADO</th>
+                                <th rowspan="2">Ingrediente</th>
+                                <th rowspan="2">Cantidad</th>
+                            </tr>
+                            <tr>
+                                <th style="font-size:8pt">Armado</th>
+                                <th style="font-size:8pt">Superv.</th>
+                            </tr>
+                        </thead>
+                        <tbody>${filasIng}</tbody>
+                    </table>
+                    <div class="firmas-container" style="margin-top:20px;">
+                        <div class="firma-block">
+                            <div class="firma-title">ENTREGA</div>
+                            <div class="firma-box-row">
+                                <div class="firma-line">Firma Docente</div>
+                                <div class="firma-line">Firma Pañol</div>
+                            </div>
+                        </div>
+                        <div class="firma-block">
+                            <div class="firma-title">DEVOLUCIÓN</div>
+                            <div class="firma-box-row">
+                                <div class="firma-line">Firma Docente</div>
+                                <div class="firma-line">Firma Pañol</div>
+                            </div>
+                        </div>
+                    </div>`;
+
+            } else {
+                // ——— HOJA DE PAÑOL: Utensilios + Vajilla ———
+                let filasPanol = (op.utensilios || []).map(u =>
+                    `<tr><td>${u.nombre}</td><td style="text-align:center;">${u.cantidad}</td><td style="border:1px solid #000;width:25px;"></td></tr>`
+                ).join('');
+                // Filas vacías para agregar a mano
+                for (let i = 0; i < 6; i++) filasPanol += '<tr><td style="height:18px;"></td><td></td><td style="border:1px solid #000;"></td></tr>';
+
+                const tablaPanolHTML = `
+                    <table class="print-table" style="width:100%;">
+                        <thead>
+                            <tr>
+                                <th>Utensilio / Equipo</th>
+                                <th style="width:40px;">Cant.</th>
+                                <th style="width:25px;">✓</th>
+                            </tr>
+                        </thead>
+                        <tbody>${filasPanol}</tbody>
+                    </table>`;
+
+                const filasVajilla = LISTA_VAJILLA.map(v =>
+                    `<tr>
+                        <td style="padding:1px 4px;">${v}</td>
+                        <td style="border:1px solid #000;width:35px;"></td>
+                        <td style="border:1px solid #000;width:25px;"></td>
+                    </tr>`
+                ).join('');
+
+                const tablaVajillaHTML = `
+                    <table class="print-table" style="width:100%;">
+                        <thead>
+                            <tr>
+                                <th>Vajilla y Montaje</th>
+                                <th style="width:35px;">Cant.</th>
+                                <th style="width:25px;">✓</th>
+                            </tr>
+                        </thead>
+                        <tbody>${filasVajilla}</tbody>
+                    </table>`;
+
+                contenido = `
+                    <p style="margin:8px 0 4px 0; font-size:9pt;">
+                        <strong>Encargado Pañol:</strong> ${op.docentePanol || '___________________________'}
+                    </p>
+                    <div style="display:flex; gap:12px; align-items:flex-start; margin-top:6px;">
+                        <div style="flex:1;">${tablaPanolHTML}</div>
+                        <div style="flex:1.4;">${tablaVajillaHTML}</div>
+                    </div>
+                    <div class="firmas-container" style="margin-top:16px;">
+                        <div class="firma-block">
+                            <div class="firma-title">ENTREGA PAÑOL</div>
+                            <div class="firma-box-row">
+                                <div class="firma-line">Firma Docente</div>
+                                <div class="firma-line">Firma Encargado</div>
+                            </div>
+                        </div>
+                        <div class="firma-block">
+                            <div class="firma-title">DEVOLUCIÓN PAÑOL</div>
+                            <div class="firma-box-row">
+                                <div class="firma-line">Firma Docente</div>
+                                <div class="firma-line">Firma Encargado</div>
+                            </div>
+                        </div>
+                    </div>`;
+            }
+
+            page.innerHTML = headerHTML + contenido;
             area.appendChild(page);
         }
         window.print();
     } catch (error) { console.error(error); alert("Error al imprimir: " + error.message); }
-};
+}
 
 // Verificar si la página fue abierta por QR
 handleQRScan();
