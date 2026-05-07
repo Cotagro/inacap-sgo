@@ -884,11 +884,15 @@ async function renderBodegaPedidos() {
 window.marcarIngrediente = async (despachoId, ingId, estado) => {
     const despacho = await fsGet('despachos', despachoId);
     if (!despacho) return;
-    const ings = (despacho.ingredientes || []).map(i => i.id === ingId ? { ...i, estado } : i);
+    const ings = (despacho.ingredientes || []).map(i => 
+        i.id === ingId ? { ...i, estado } : i
+    );
     const todosVerificados = ings.every(i => i.estado);
     const tieneFaltante = ings.some(i => i.estado === 'FALTA');
-    // ENTREGADO = todos marcados y ninguno falta | CON_FALTANTE = tiene faltantes | PENDIENTE = sin marcar
-    const estadoDespacho = !todosVerificados ? 'PENDIENTE' : tieneFaltante ? 'CON_FALTANTE' : 'ENTREGADO';
+    const estadoDespacho = !todosVerificados ? 'PENDIENTE' 
+        : tieneFaltante ? 'CON_FALTANTE' 
+        : 'ENTREGADO';
+    
     await fsUpdate('despachos', despachoId, {
         ingredientes: ings,
         verificado: todosVerificados,
@@ -1983,7 +1987,6 @@ window.marcarIngrediente = async (despachoId, ingId, estado) => {
         const despacho = await fsGet('despachos', despachoId);
         if (despacho) {
             const ing = (despacho.ingredientes || []).find(i => i.id === ingId);
-            // Solo descontar si antes NO era OK (evitar doble descuento)
             if (ing && ing.estado !== 'OK') {
                 const asigs = await fsGetAll('asignaturas');
                 const asig  = asigs.find(a => a.id === despacho.asignaturaId);
@@ -1992,8 +1995,14 @@ window.marcarIngrediente = async (despachoId, ingId, estado) => {
             }
         }
     }
-    // Ejecutar lógica original
+    // Ejecutar lógica original que actualiza estado
     await _marcarIngredienteOriginal(despachoId, ingId, estado);
+    
+    // Forzar re-render de bodega si está abierta
+    const bodegaPanel = document.getElementById('bodega-panel');
+    if (bodegaPanel && bodegaPanel.style.display !== 'none') {
+        await renderBodegaPedidos();
+    }
 };
  
 // ==========================================
