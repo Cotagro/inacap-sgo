@@ -1193,12 +1193,29 @@ window.enviarABodega = async (despachoId) => {
     const todosVerificados = ingsActualizados.every(i => i.estado !== null);
     const estadoDespacho   = tieneFaltante ? 'CON_FALTANTE' : todosVerificados ? 'ENTREGADO' : 'PENDIENTE';
 
+    // Guardar en Firebase
     await fsUpdate('despachos', despachoId, {
         ingredientes: ingsActualizados,
         estadoDespacho,
         verificado: todosVerificados,
         timestampVerificacion: Date.now()
     });
+
+    // ✅ Descontar del stock los ingredientes marcados como OK
+    const asigs = await fsGetAll('asignaturas');
+    const asig  = asigs.find(a => a.id === despacho.asignaturaId);
+    const ref   = `${asig?.nombre || 'Clase'} C${despacho.clase} — ${formatDate(despacho.fecha)}`;
+
+    for (const ing of ingsActualizados) {
+        if (ing.estado === 'OK') {
+            await descontarStockDespacho(ing.nombre, parseFloat(ing.cantidad), ing.unidad, ref);
+        }
+    }
+
+    // ✅ Descontar también los extras solicitados
+    for (const extra of (despacho.extras || [])) {
+        await descontarStockDespacho(extra.nombre, parseFloat(extra.cantidad), extra.unidad, `${ref} (Extra)`);
+    }
 
     // Mostrar confirmación
     const btnEnviar = document.getElementById('btn-enviar-bodega');
@@ -1208,7 +1225,7 @@ window.enviarABodega = async (despachoId) => {
                 color:${tieneFaltante ? '#721c24' : '#155724'};
                 padding:15px;border-radius:10px;text-align:center;
                 font-weight:bold;margin-top:20px;font-size:1.05em;">
-                ${tieneFaltante ? '⚠️ Pedido enviado con faltantes' : '✅ ¡Pedido enviado a bodega correctamente!'}
+                ${tieneFaltante ? '⚠️ Pedido enviado con faltantes — Stock actualizado' : '✅ ¡Pedido enviado! Stock descontado automáticamente'}
             </div>`;
     }
 };
