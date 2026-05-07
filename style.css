@@ -194,13 +194,14 @@ ul li:last-child { border-bottom: none; }
     display: inline-block;
     border: 2px solid #000;
     border-radius: 6px;
-    padding: 10px 14px;
-    width: 200px;
+    padding: 12px 14px;
+    width: 220px;
     font-family: Arial, sans-serif;
     vertical-align: top;
     margin: 8px;
     background: white;
     box-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+    text-align: center;
 }
 .etiqueta-header { font-size: 8pt; font-weight: bold; color: #0056b3; border-bottom: 1px solid #ccc; padding-bottom: 3px; margin-bottom: 4px; text-align: center; }
 .etiqueta-semana { font-size: 8pt; text-align: center; color: #666; margin-bottom: 2px; }
@@ -278,6 +279,7 @@ ul li:last-child { border-bottom: none; }
 
 .badge { padding: 3px 8px; border-radius: 10px; font-size: 0.8em; font-weight: bold; }
 .badge-ok { background: #d4edda; color: #155724; }
+.badge-entregado { background: #d4edda; color: #155724; }
 .badge-alerta { background: #f8d7da; color: #721c24; }
 .badge-pendiente { background: #fff3cd; color: #856404; }
 
@@ -300,7 +302,7 @@ ul li:last-child { border-bottom: none; }
 }
 
 /* ==========================================
-   IMPRESIÓN
+   IMPRESIÓN — OPTIMIZADO ZEBRA/BROTHER
    ========================================== */
 @media print {
     @page { size: A4 portrait; margin: 0.5cm; }
@@ -309,9 +311,52 @@ ul li:last-child { border-bottom: none; }
     #print-area, #print-area * { visibility: visible; }
     #print-area { position: absolute; left: 0; top: 0; width: 100%; margin: 0; padding: 0; }
 
-    /* Impresión de etiquetas */
-    .etiqueta-grupo { page-break-inside: avoid; }
-    .etiqueta-clase, .etiqueta-ingrediente { box-shadow: none !important; }
+    /* Etiquetas — optimizado para Zebra */
+    #etiquetas-preview, #etiquetas-preview * { visibility: visible; }
+    #etiquetas-preview { position: absolute; left: 0; top: 0; width: 100%; }
+
+    .etiqueta-grupo {
+        page-break-inside: avoid;
+        margin-bottom: 20px;
+    }
+    .etiqueta-grupo h4 { display: none; } /* Ocultar título en impresión */
+
+    .etiqueta-clase {
+        box-shadow: none !important;
+        border: 2px solid #000 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+        width: 200px !important;
+        page-break-inside: avoid;
+    }
+
+    .etiquetas-ingredientes-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+        margin-top: 8px;
+    }
+
+    .etiqueta-ingrediente {
+        box-shadow: none !important;
+        border: 1.5px solid #000 !important;
+        width: 110px !important;
+        page-break-inside: avoid;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    .ei-cantidad {
+        font-size: 14pt !important;
+        font-weight: bold !important;
+        color: #000 !important;
+    }
+
+    /* QR visible en impresión */
+    .etiqueta-clase img, .etiqueta-clase canvas {
+        display: block !important;
+        margin: 0 auto !important;
+    }
 
     .op-print-sheet {
         width: 100%; min-height: 100vh; page-break-after: always;
@@ -336,8 +381,4 @@ ul li:last-child { border-bottom: none; }
     .firma-title { background: #eee; text-align: center; font-weight: bold; border: 1px solid #000; margin-bottom: 5px; padding: 2px; font-size: 9pt; -webkit-print-color-adjust: exact; }
     .firma-box-row { display: flex; justify-content: space-around; gap: 10px; }
     .firma-line { height: 30px; border-bottom: 1px solid #000; margin-top: 15px; text-align: center; font-size: 8pt; padding-top: 15px; width: 100%; color: #666; }
-
-    /* Cuando se imprimen etiquetas, ocultar el resto */
-    .etiquetas-print-mode body * { visibility: hidden; }
-    .etiquetas-print-mode #etiquetas, .etiquetas-print-mode #etiquetas * { visibility: visible; }
 }
