@@ -123,6 +123,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (sectionId === 'bodega') { await renderBodegaWeekFilter(); }
             if (sectionId === 'stock') { await renderStock(); }
             if (sectionId === 'dashboard') { await renderDashboard(); }
+            if (sectionId === 'graficos') { await renderGraficosInit(); }
  
             navButtons.forEach(btn => btn.classList.remove('active'));
             button.classList.add('active');
@@ -2208,4 +2209,277 @@ window.irASeccion = (seccion) => {
     const btn = document.querySelector(`button[data-section="${seccion}"]`);
     if (btn) btn.click();
 };
+ 
+// ==========================================
+// MÓDULO GRÁFICOS — ANÁLISIS DE CONSUMO
+// ==========================================
+let chartSemanas   = null;
+let chartTopIngs   = null;
+let chartFamilias  = null;
+let datosGraficos  = null;
+ 
+const CHART_COLORS = [
+    '#0056b3','#28a745','#dc3545','#fd7e14','#6f42c1',
+    '#17a2b8','#e83e8c','#20c997','#ffc107','#6c757d',
+    '#007bff','#218838','#c82333','#e0650d','#5a32a3',
+    '#138496','#d63384','#1aa179','#d39e00','#545b62'
+];
+ 
+async function renderGraficosInit() {
+    // Llenar selectores de semana
+    const semanas = await fsGetAll('semanas');
+    semanas.sort((a, b) => a.numero - b.numero);
+    const selIni = document.getElementById('graf-semana-inicio');
+    const selFin = document.getElementById('graf-semana-fin');
+    if (!selIni || !selFin) return;
+    selIni.innerHTML = ''; selFin.innerHTML = '';
+    semanas.forEach(s => {
+        selIni.innerHTML += `<option value="${s.numero}">Semana ${s.numero}</option>`;
+        selFin.innerHTML += `<option value="${s.numero}">Semana ${s.numero}</option>`;
+    });
+    // Default: última semana seleccionada en fin
+    if (semanas.length > 0) selFin.value = semanas[semanas.length - 1].numero;
+}
+ 
+document.getElementById('btn-generar-graficos')?.addEventListener('click', async () => {
+    await generarGraficos();
+});
+ 
+document.getElementById('btn-exportar-graficos')?.addEventListener('click', () => {
+    if (!datosGraficos) { alert('Primero genera los gráficos.'); return; }
+    exportarExcelGraficos();
+});
+ 
+async function generarGraficos() {
+    const semIni   = parseInt(document.getElementById('graf-semana-inicio').value);
+    const semFin   = parseInt(document.getElementById('graf-semana-fin').value);
+    const topN     = parseInt(document.getElementById('graf-top-n').value);
+    const familia  = document.getElementById('graf-familia').value;
+ 
+    if (!semIni || !semFin) { alert('Selecciona rango de semanas.'); return; }
+ 
+    const [clases, ops, todosIngs] = await Promise.all([
+        fsGetAll('horario'), fsGetAll('ops'), fsGetAll('ingredientes')
+    ]);
+ 
+    const familiaMap = {};
+    todosIngs.forEach(i => { familiaMap[i.nombre] = i.familia || 'Sin Familia'; });
+ 
+    const clasesFiltradas = clases.filter(c => c.semana >= semIni && c.semana <= semFin);
+ 
+    // Acumular datos
+    const porSemana   = {}; // { semana: totalItems }
+    const porIng      = {}; // { nombre|unidad: { cant, familia } }
+    const porFamilia  = {}; // { familia: cant }
+ 
+    clasesFiltradas.forEach(c => {
+        const op = ops.find(o => o.asignaturaId === c.asignaturaId && o.numeroClase === c.clase);
+        if (!op || op.sinPedido) return;
+        (op.ingredientes || []).forEach(ing => {
+            const fam = familiaMap[ing.nombre] || 'Sin Familia';
+            if (familia && fam !== familia) return; // filtro familia
+ 
+            const cant = parseFloat(ing.cantidad) || 0;
+            const key  = `${ing.nombre}|${ing.unidad}`;
+ 
+            // Por semana (conteo de items despachados)
+            if (!porSemana[c.semana]) porSemana[c.semana] = 0;
+            porSemana[c.semana] += cant;
+ 
+            // Por ingrediente
+            if (!porIng[key]) porIng[key] = { nombre: ing.nombre, unidad: ing.unidad, cant: 0, familia: fam };
+            porIng[key].cant += cant;
+ 
+            // Por familia
+            if (!porFamilia[fam]) porFamilia[fam] = 0;
+            porFamilia[fam] += cant;
+        });
+    });
+ 
+    // Ordenar ingredientes por cantidad desc y tomar top N
+    const ingsOrdenados = Object.values(porIng)
+        .sort((a, b) => b.cant - a.cant)
+        .slice(0, topN);
+ 
+    datosGraficos = { porSemana, porIng, porFamilia, ingsOrdenados, semIni, semFin };
+ 
+    // Mostrar sección
+    document.getElementById('graf-resumen').style.display = 'block';
+ 
+    // KPIs
+    const totalItems = Object.values(porIng).reduce((s, i) => s + i.cant, 0);
+    const totalClases = clasesFiltradas.length;
+    const totalIng    = Object.keys(porIng).length;
+    const famMayor    = Object.entries(porFamilia).sort((a, b) => b[1] - a[1])[0];
+ 
+    document.getElementById('graf-kpis').innerHTML = `
+        <div class="dash-card dash-card-blue">
+            <div class="dash-card-icon">🏫</div>
+            <div class="dash-card-num">${totalClases}</div>
+            <div class="dash-card-label">Clases analizadas</div>
+        </div>
+        <div class="dash-card dash-card-purple">
+            <div class="dash-card-icon">🥦</div>
+            <div class="dash-card-num">${totalIng}</div>
+            <div class="dash-card-label">Ingredientes únicos</div>
+        </div>
+        <div class="dash-card dash-card-green">
+            <div class="dash-card-icon">⚖️</div>
+            <div class="dash-card-num">${totalItems.toFixed(1)}</div>
+            <div class="dash-card-label">Unidades totales</div>
+        </div>
+        <div class="dash-card dash-card-warning">
+            <div class="dash-card-icon">🏆</div>
+            <div class="dash-card-num" style="font-size:1.1em;">${famMayor?.[0] || '—'}</div>
+            <div class="dash-card-label">Familia top</div>
+        </div>`;
+ 
+    // Destruir charts anteriores si existen
+    if (chartSemanas)  { chartSemanas.destroy();  chartSemanas  = null; }
+    if (chartTopIngs)  { chartTopIngs.destroy();  chartTopIngs  = null; }
+    if (chartFamilias) { chartFamilias.destroy(); chartFamilias = null; }
+ 
+    // ---- Chart 1: Consumo por semana (línea) ----
+    const semanasLabels = Object.keys(porSemana).sort((a, b) => a - b);
+    const semanasData   = semanasLabels.map(s => parseFloat(porSemana[s].toFixed(2)));
+ 
+    const ctxSemanas = document.getElementById('chart-semanas');
+    if (ctxSemanas) {
+        chartSemanas = new Chart(ctxSemanas, {
+            type: 'bar',
+            data: {
+                labels: semanasLabels.map(s => `Semana ${s}`),
+                datasets: [{
+                    label: 'Unidades despachadas',
+                    data: semanasData,
+                    backgroundColor: 'rgba(0,86,179,0.7)',
+                    borderColor: '#0056b3',
+                    borderWidth: 2,
+                    borderRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, ticks: { precision: 1 } }
+                }
+            }
+        });
+    }
+ 
+    // ---- Chart 2: Top ingredientes (barras horizontales) ----
+    const ctxTopIngs = document.getElementById('chart-top-ings');
+    if (ctxTopIngs && ingsOrdenados.length > 0) {
+        chartTopIngs = new Chart(ctxTopIngs, {
+            type: 'bar',
+            data: {
+                labels: ingsOrdenados.map(i => `${i.nombre} (${i.unidad})`),
+                datasets: [{
+                    label: 'Cantidad total',
+                    data: ingsOrdenados.map(i => parseFloat(i.cant.toFixed(2))),
+                    backgroundColor: ingsOrdenados.map((_, idx) => CHART_COLORS[idx % CHART_COLORS.length] + 'CC'),
+                    borderColor:     ingsOrdenados.map((_, idx) => CHART_COLORS[idx % CHART_COLORS.length]),
+                    borderWidth: 1,
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                plugins: { legend: { display: false } },
+                scales: { x: { beginAtZero: true } }
+            }
+        });
+    }
+ 
+    // ---- Chart 3: Por familia (dona) ----
+    const ctxFamilias = document.getElementById('chart-familias');
+    if (ctxFamilias) {
+        const famLabels = Object.keys(porFamilia).sort((a, b) => porFamilia[b] - porFamilia[a]);
+        const famData   = famLabels.map(f => parseFloat(porFamilia[f].toFixed(2)));
+        chartFamilias = new Chart(ctxFamilias, {
+            type: 'doughnut',
+            data: {
+                labels: famLabels,
+                datasets: [{
+                    data: famData,
+                    backgroundColor: famLabels.map((_, idx) => CHART_COLORS[idx % CHART_COLORS.length] + 'DD'),
+                    borderColor: '#fff',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: 'right', labels: { font: { size: 11 } } }
+                }
+            }
+        });
+    }
+ 
+    // ---- Tabla detalle ----
+    const filas = ingsOrdenados.map((ing, idx) => `
+        <tr>
+            <td style="text-align:center;color:#666;">${idx + 1}</td>
+            <td><b>${ing.nombre}</b></td>
+            <td><span class="tag-reemplazo" style="background:#e9ecef;color:#495057;">${ing.familia}</span></td>
+            <td style="text-align:center;">${ing.cant.toFixed(2)}</td>
+            <td style="text-align:center;">${ing.unidad}</td>
+            <td>
+                <div style="background:#e9ecef;border-radius:4px;height:8px;overflow:hidden;min-width:80px;">
+                    <div style="background:#0056b3;height:100%;width:${Math.min(100,(ing.cant/ingsOrdenados[0].cant)*100).toFixed(0)}%;"></div>
+                </div>
+            </td>
+        </tr>`).join('');
+ 
+    document.getElementById('graf-tabla').innerHTML = `
+        <table class="consolidado-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Ingrediente</th>
+                    <th>Familia</th>
+                    <th>Total</th>
+                    <th>Unidad</th>
+                    <th>Proporción</th>
+                </tr>
+            </thead>
+            <tbody>${filas}</tbody>
+        </table>`;
+ 
+    // Scroll suave al resultado
+    document.getElementById('graf-resumen').scrollIntoView({ behavior: 'smooth' });
+}
+ 
+function exportarExcelGraficos() {
+    const wb = XLSX.utils.book_new();
+    const { ingsOrdenados, porSemana, porFamilia, semIni, semFin } = datosGraficos;
+ 
+    // Hoja top ingredientes
+    const dataIngs = ingsOrdenados.map((ing, idx) => ({
+        'Ranking': idx + 1,
+        'Ingrediente': ing.nombre,
+        'Familia': ing.familia,
+        'Cantidad Total': parseFloat(ing.cant.toFixed(2)),
+        'Unidad': ing.unidad
+    }));
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(dataIngs), 'Top Ingredientes');
+ 
+    // Hoja por semana
+    const dataSem = Object.keys(porSemana).sort((a, b) => a - b).map(s => ({
+        'Semana': parseInt(s),
+        'Total Unidades': parseFloat(porSemana[s].toFixed(2))
+    }));
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(dataSem), 'Por Semana');
+ 
+    // Hoja por familia
+    const dataFam = Object.entries(porFamilia).sort((a, b) => b[1] - a[1]).map(([fam, cant]) => ({
+        'Familia': fam,
+        'Total Unidades': parseFloat(cant.toFixed(2))
+    }));
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(dataFam), 'Por Familia');
+ 
+    XLSX.writeFile(wb, `Analisis_Consumo_S${semIni}-S${semFin}.xlsx`);
+}
  
