@@ -717,17 +717,23 @@ document.getElementById('btn-generar-etiquetas')?.addEventListener('click', asyn
         container.appendChild(wrapper);
 
         // Generar QR después de insertar en DOM
+     setTimeout(() => {
+    const div = document.getElementById(`qr-${c.id}`);
+    if (div && typeof QRCode !== 'undefined') {
+        div.innerHTML = '';
+        new QRCode(div, {
+            text: qrUrl,
+            width: 80,
+            height: 80,
+            correctLevel: QRCode.CorrectLevel.M
+        });
+        // Eliminar el canvas duplicado, dejar solo la imagen
         setTimeout(() => {
-            const div = document.getElementById(`qr-${c.id}`);
-            if (div && typeof QRCode !== 'undefined') {
-                new QRCode(div, {
-                    text: qrUrl,
-                    width: 130,
-                    height: 130,
-                    correctLevel: QRCode.CorrectLevel.M
-                });
-            }
-        }, 300);
+            const canvas = div.querySelector('canvas');
+            if (canvas) canvas.remove();
+        }, 200);
+    }
+}, 500);
     }
 
     document.getElementById('btn-imprimir-etiquetas').style.display = 'inline-block';
