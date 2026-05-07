@@ -111,6 +111,8 @@ button[type="button"]:hover { background-color: #5a6268; }
 
 #print-btn, .export-btn { background-color: #28a745; color: white; }
 #print-btn:hover, .export-btn:hover { background-color: #218838; }
+#print-panol-btn { background-color: #6f42c1; color: white; }
+#print-panol-btn:hover { background-color: #5a32a3; }
 .export-btn { float: right; margin-bottom: 15px; margin-left: 10px; }
 
 /* ==========================================
