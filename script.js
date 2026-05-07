@@ -122,6 +122,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (sectionId === 'etiquetas') { await renderEtiquetaWeekFilter(); }
             if (sectionId === 'bodega') { await renderBodegaWeekFilter(); }
             if (sectionId === 'stock') { await renderStock(); }
+            if (sectionId === 'dashboard') { await renderDashboard(); }
  
             navButtons.forEach(btn => btn.classList.remove('active'));
             button.classList.add('active');
@@ -140,6 +141,7 @@ async function initAll() {
         renderIngredientesDB(), renderGroupedOPs(), renderHorario(),
         renderBloqueos(), renderOpCopySelect()
     ]);
+    await renderDashboard();
     await renderCalendar();
     await renderCalendarioFiltroProfesor();
 }
@@ -1991,3 +1993,219 @@ window.marcarIngrediente = async (despachoId, ingId, estado) => {
     // Ejecutar lógica original
     await _marcarIngredienteOriginal(despachoId, ingId, estado);
 };
+ 
+// ==========================================
+// DASHBOARD — VISTA INICIO
+// ==========================================
+async function renderDashboard() {
+    const container = document.getElementById('dashboard-container');
+    if (!container) return;
+    container.innerHTML = '<div style="padding:30px;text-align:center;color:#666;">🔄 Cargando dashboard...</div>';
+ 
+    const hoy = new Date();
+    const hoyStr = hoy.toISOString().split('T')[0];
+    const diaNombre = hoy.toLocaleDateString('es-CL', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+ 
+    const [clases, ops, profs, asigs, semanas, despachos, stockActual] = await Promise.all([
+        fsGetAll('horario'), fsGetAll('ops'), fsGetAll('profesores'),
+        fsGetAll('asignaturas'), fsGetAll('semanas'), fsGetAll('despachos'),
+        fsGetAll('stock_actual')
+    ]);
+ 
+    // ---- Semana actual ----
+    semanas.sort((a, b) => a.numero - b.numero);
+    const semanaActual = semanas.slice().reverse().find(s => new Date(s.fechaInicio + 'T12:00:00') <= hoy);
+    const proxSemana   = semanas.find(s => new Date(s.fechaInicio + 'T12:00:00') > hoy);
+ 
+    // ---- Clases de HOY ----
+    const clasesHoy = clases.filter(c => c.fecha === hoyStr).sort((a, b) => a.horario.localeCompare(b.horario));
+ 
+    // ---- Clases de esta semana ----
+    const clasesSemana = semanaActual
+        ? clases.filter(c => c.semana === semanaActual.numero)
+        : [];
+ 
+    // ---- OPs faltantes esta semana ----
+    const opsFaltantes = clasesSemana.filter(c => {
+        const op = ops.find(o => o.asignaturaId === c.asignaturaId && o.numeroClase === c.clase);
+        return !op;
+    });
+ 
+    // ---- Pedidos pendientes en bodega ----
+    const pedidosPendientes = despachos.filter(d => d.estadoDespacho === 'PENDIENTE' || !d.estadoDespacho);
+    const pedidosAlerta     = despachos.filter(d => d.estadoDespacho === 'CON_FALTANTE');
+ 
+    // ---- Stock crítico ----
+    const stockCritico = stockActual.filter(s => {
+        const comprometido = clases
+            .filter(c => c.fecha >= hoyStr)
+            .reduce((sum, c) => {
+                const op = ops.find(o => o.asignaturaId === c.asignaturaId && o.numeroClase === c.clase);
+                if (!op || op.sinPedido) return sum;
+                const ing = (op.ingredientes || []).find(i =>
+                    i.nombre.toLowerCase() === s.nombre.toLowerCase() && i.unidad === s.unidad
+                );
+                return sum + (ing ? parseFloat(ing.cantidad) : 0);
+            }, 0);
+        return comprometido > 0 && s.cantidad < comprometido;
+    });
+ 
+    // ---- HTML Tarjetas de resumen ----
+    const tarjetasHTML = `
+        <div class="dash-cards">
+            <div class="dash-card dash-card-blue">
+                <div class="dash-card-icon">📅</div>
+                <div class="dash-card-num">${clasesHoy.length}</div>
+                <div class="dash-card-label">Clases Hoy</div>
+            </div>
+            <div class="dash-card dash-card-purple">
+                <div class="dash-card-icon">📚</div>
+                <div class="dash-card-num">${clasesSemana.length}</div>
+                <div class="dash-card-label">Clases Semana ${semanaActual?.numero || '—'}</div>
+            </div>
+            <div class="dash-card ${opsFaltantes.length > 0 ? 'dash-card-warning' : 'dash-card-green'}">
+                <div class="dash-card-icon">${opsFaltantes.length > 0 ? '⚠️' : '✅'}</div>
+                <div class="dash-card-num">${opsFaltantes.length}</div>
+                <div class="dash-card-label">Clases sin OP</div>
+            </div>
+            <div class="dash-card ${pedidosPendientes.length > 0 ? 'dash-card-warning' : 'dash-card-green'}">
+                <div class="dash-card-icon">📦</div>
+                <div class="dash-card-num">${pedidosPendientes.length}</div>
+                <div class="dash-card-label">Pedidos Pendientes</div>
+            </div>
+            <div class="dash-card ${pedidosAlerta.length > 0 ? 'dash-card-red' : 'dash-card-green'}">
+                <div class="dash-card-icon">🚨</div>
+                <div class="dash-card-num">${pedidosAlerta.length}</div>
+                <div class="dash-card-label">Con Faltantes</div>
+            </div>
+            <div class="dash-card ${stockCritico.length > 0 ? 'dash-card-red' : 'dash-card-green'}">
+                <div class="dash-card-icon">🏪</div>
+                <div class="dash-card-num">${stockCritico.length}</div>
+                <div class="dash-card-label">Stock Crítico</div>
+            </div>
+        </div>`;
+ 
+    // ---- Clases de hoy detalladas ----
+    let clasesHoyHTML = '';
+    if (clasesHoy.length === 0) {
+        clasesHoyHTML = '<div style="padding:15px;text-align:center;color:#999;">Sin clases programadas para hoy.</div>';
+    } else {
+        clasesHoyHTML = clasesHoy.map(c => {
+            const asig  = asigs.find(a => a.id === c.asignaturaId);
+            const prof  = profs.find(p => p.id === c.profesorId);
+            const op    = ops.find(o => o.asignaturaId === c.asignaturaId && o.numeroClase === c.clase);
+            const desp  = despachos.find(d => d.horarioId === c.id);
+            const reemplazante = c.reemplazoId ? profs.find(p => p.id === c.reemplazoId) : null;
+ 
+            let estadoDespacho = '';
+            if (desp) {
+                const est = desp.estadoDespacho || 'PENDIENTE';
+                estadoDespacho = est === 'ENTREGADO'    ? '<span class="badge badge-entregado">🟢 Entregado</span>'
+                               : est === 'CON_FALTANTE' ? '<span class="badge badge-alerta">🔴 Con faltantes</span>'
+                               : '<span class="badge badge-pendiente">🟡 Pendiente</span>';
+            } else {
+                estadoDespacho = '<span class="badge" style="background:#e9ecef;color:#495057;">⬜ Sin escanear</span>';
+            }
+ 
+            const opTag = op
+                ? `<span style="color:#0056b3;font-weight:bold;">${op.sinPedido ? 'Teórica' : op.nombreReceta}</span>`
+                : '<span style="color:#dc3545;">⚠️ Sin OP</span>';
+ 
+            const profDisplay = reemplazante
+                ? `<span style="text-decoration:line-through;color:#999;">${prof?.nombre}</span> ➡️ <b>${reemplazante.nombre}</b>`
+                : `<b>${prof?.nombre || 'N/A'}</b>`;
+ 
+            return `
+                <div class="dash-clase-item">
+                    <div class="dash-clase-hora">${c.horario}</div>
+                    <div class="dash-clase-info">
+                        <div><b>${asig?.nombre || '—'}</b> — Clase ${c.clase} &nbsp; ${estadoDespacho}</div>
+                        <div style="font-size:0.9em;color:#555;margin-top:3px;">
+                            ${opTag} &nbsp;|&nbsp; 👨‍🏫 ${profDisplay} &nbsp;|&nbsp; 📍 Sala ${c.sala}
+                        </div>
+                    </div>
+                    <div class="dash-clase-acciones">
+                        <button onclick="irASeccion('bodega')" style="background:#28a745;padding:5px 10px;font-size:12px;">📦 Bodega</button>
+                        <button onclick="irASeccion('etiquetas')" style="background:#17a2b8;padding:5px 10px;font-size:12px;">🏷️ Etiquetas</button>
+                    </div>
+                </div>`;
+        }).join('');
+    }
+ 
+    // ---- Alertas stock crítico ----
+    let stockAlertHTML = '';
+    if (stockCritico.length > 0) {
+        const filas = stockCritico.slice(0, 5).map(s =>
+            `<li style="padding:4px 0;border-bottom:1px solid #f5c6cb;">
+                🔴 <b>${s.nombre}</b> — Solo ${(s.cantidad || 0).toFixed(2)} ${s.unidad} disponibles
+            </li>`
+        ).join('');
+        stockAlertHTML = `
+            <div class="card" style="border-left:5px solid #dc3545;background:#fff8f8;">
+                <h4 style="color:#dc3545;margin-top:0;">🏪 Stock Crítico</h4>
+                <ul style="padding:0;list-style:none;margin:0;">${filas}</ul>
+                <button onclick="irASeccion('stock')" style="background:#fd7e14;margin-top:10px;padding:6px 14px;font-size:13px;">
+                    Ver Stock Completo →
+                </button>
+            </div>`;
+    }
+ 
+    // ---- OPs faltantes ----
+    let opsFaltantesHTML = '';
+    if (opsFaltantes.length > 0) {
+        const filas = opsFaltantes.slice(0, 5).map(c => {
+            const asig = asigs.find(a => a.id === c.asignaturaId);
+            return `<li style="padding:4px 0;border-bottom:1px solid #ffeeba;">
+                ⚠️ <b>${asig?.nombre || '—'}</b> Clase ${c.clase} — ${formatDate(c.fecha)}
+            </li>`;
+        }).join('');
+        opsFaltantesHTML = `
+            <div class="card" style="border-left:5px solid #ffc107;background:#fffbf0;">
+                <h4 style="color:#856404;margin-top:0;">⚠️ Clases sin OP Asignada</h4>
+                <ul style="padding:0;list-style:none;margin:0;">${filas}</ul>
+                <button onclick="irASeccion('configuracion')" style="background:#ffc107;color:#000;margin-top:10px;padding:6px 14px;font-size:13px;">
+                    Crear OPs →
+                </button>
+            </div>`;
+    }
+ 
+    // ---- Render final ----
+    container.innerHTML = `
+        <div style="margin-bottom:20px;">
+            <h2 style="margin-bottom:4px;">🏠 Dashboard</h2>
+            <p style="color:#666;margin:0;font-size:0.95em;">📅 ${diaNombre.charAt(0).toUpperCase() + diaNombre.slice(1)}</p>
+        </div>
+ 
+        ${tarjetasHTML}
+ 
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:20px;">
+            <div>
+                <div class="card" style="border-left:5px solid #0056b3;">
+                    <h4 style="margin-top:0;">📅 Clases de Hoy</h4>
+                    ${clasesHoyHTML}
+                </div>
+                ${opsFaltantesHTML}
+            </div>
+            <div>
+                ${stockAlertHTML}
+                <div class="card" style="border-left:5px solid #6f42c1;">
+                    <h4 style="margin-top:0;">🗓️ Accesos Rápidos</h4>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                        <button onclick="irASeccion('calendario')" style="background:#0056b3;padding:12px;">📅 Calendario</button>
+                        <button onclick="irASeccion('bodega')" style="background:#28a745;padding:12px;">📦 Bodega</button>
+                        <button onclick="irASeccion('etiquetas')" style="background:#17a2b8;padding:12px;">🏷️ Etiquetas</button>
+                        <button onclick="irASeccion('stock')" style="background:#fd7e14;padding:12px;">📊 Stock</button>
+                        <button onclick="irASeccion('consolidado')" style="background:#6f42c1;padding:12px;">🛒 Consolidado</button>
+                        <button onclick="irASeccion('horario')" style="background:#6c757d;padding:12px;">📋 Horario</button>
+                    </div>
+                </div>
+            </div>
+        </div>`;
+}
+ 
+// Navegar a sección desde dashboard
+window.irASeccion = (seccion) => {
+    const btn = document.querySelector(`button[data-section="${seccion}"]`);
+    if (btn) btn.click();
+};
+ 
