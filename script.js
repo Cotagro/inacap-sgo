@@ -6,7 +6,7 @@ import {
     getFirestore, collection, doc, addDoc, setDoc, getDoc, getDocs,
     deleteDoc, updateDoc, query, where, orderBy, onSnapshot, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
+ 
 const firebaseConfig = {
     apiKey: "AIzaSyDnK5Ql0DzM9THRueY2JHzDbnUZDO87sBA",
     authDomain: "inacap-sgo.firebaseapp.com",
@@ -15,16 +15,16 @@ const firebaseConfig = {
     messagingSenderId: "1045872472763",
     appId: "1:1045872472763:web:6dadee82cd9d81f8546f9e"
 };
-
+ 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-
+ 
 // Status UI
 function setSyncStatus(msg, color = '#ffc107') {
     const el = document.getElementById('sync-status');
     if (el) { el.textContent = msg; el.style.background = color; }
 }
-
+ 
 // ==========================================
 // HELPERS FIRESTORE
 // ==========================================
@@ -49,7 +49,7 @@ async function fsGet(col, id) {
     const snap = await getDoc(doc(db, col, id));
     return snap.exists() ? { id: snap.id, ...snap.data() } : null;
 }
-
+ 
 // ==========================================
 // CONSTANTES
 // ==========================================
@@ -69,7 +69,7 @@ const LISTA_VAJILLA = [
     "Vaso tumbler / largo", "Vaso whisky / rock", "Vaso shot", "Taza de capuccino",
     "Jarra de vidrio", "Florero", "Plato sombrero grande", "Plato sombrero pequeño"
 ];
-
+ 
 let calendar;
 let datosConsolidadoGlobal = { total: null, detalle: null, range: '' };
 let cacheHorario = [];
@@ -77,7 +77,7 @@ let ingredientesTemporales = [];
 let utensiliosTemporales = [];
 let bodegaOperador = '';
 let bodegaUnsubscribe = null;
-
+ 
 // ==========================================
 // HELPERS DE FORMATO
 // ==========================================
@@ -86,7 +86,7 @@ function formatDate(dateStr) {
     const [y, m, d] = dateStr.split('-');
     return `${d}/${m}/${y}`;
 }
-
+ 
 async function getWeekNumber(dateStr) {
     const semanas = await fsGetAll('semanas');
     semanas.sort((a, b) => new Date(b.fechaInicio) - new Date(a.fechaInicio));
@@ -94,13 +94,13 @@ async function getWeekNumber(dateStr) {
     const found = semanas.find(s => new Date(s.fechaInicio) <= target);
     return found ? found.numero : null;
 }
-
+ 
 // ==========================================
 // NAVEGACIÓN
 // ==========================================
 document.addEventListener('DOMContentLoaded', () => {
     setSyncStatus('🟢 Conectado a Firebase', '#28a745');
-
+ 
     const navButtons = document.querySelectorAll('nav button');
     navButtons.forEach(button => {
         button.addEventListener('click', async () => {
@@ -121,7 +121,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (sectionId === 'horario') { await renderWeekFilter(); await renderHorario(); }
             if (sectionId === 'etiquetas') { await renderEtiquetaWeekFilter(); }
             if (sectionId === 'bodega') { await renderBodegaWeekFilter(); }
-
+            if (sectionId === 'stock') { await renderStock(); }
+ 
             navButtons.forEach(btn => btn.classList.remove('active'));
             button.classList.add('active');
             document.querySelectorAll('main section').forEach(sec => sec.classList.remove('active-section'));
@@ -129,10 +130,10 @@ document.addEventListener('DOMContentLoaded', () => {
             if (sectionId === 'calendario' && calendar) setTimeout(() => calendar.render(), 100);
         });
     });
-
+ 
     initAll();
 });
-
+ 
 async function initAll() {
     await Promise.all([
         renderSemanas(), renderProfesores(), renderAsignaturas(),
@@ -142,7 +143,7 @@ async function initAll() {
     await renderCalendar();
     await renderCalendarioFiltroProfesor();
 }
-
+ 
 // ==========================================
 // RENDERIZADO — SEMANAS
 // ==========================================
@@ -160,7 +161,7 @@ async function renderSemanas() {
     });
     await renderWeekFilter();
 }
-
+ 
 // ==========================================
 // RENDERIZADO — PROFESORES
 // ==========================================
@@ -184,7 +185,7 @@ async function renderProfesores() {
         }
     });
 }
-
+ 
 // ==========================================
 // RENDERIZADO — ASIGNATURAS
 // ==========================================
@@ -208,7 +209,7 @@ async function renderAsignaturas() {
         }
     });
 }
-
+ 
 // ==========================================
 // RENDERIZADO — BLOQUEOS
 // ==========================================
@@ -221,7 +222,7 @@ async function renderBloqueos() {
         <button class="delete-btn" onclick="deleteItem('bloqueos','${b.id}')">🗑️</button></li>`
     ).join('');
 }
-
+ 
 // ==========================================
 // RENDERIZADO — INGREDIENTES BD
 // ==========================================
@@ -238,7 +239,7 @@ async function renderIngredientesDB() {
         ).join('');
     }
 }
-
+ 
 // ==========================================
 // RENDERIZADO — VER OPs
 // ==========================================
@@ -280,10 +281,10 @@ async function renderGroupedOPs(search = '') {
         }
     });
 }
-
+ 
 const opSearchInput = document.getElementById('op-search-input');
 if (opSearchInput) opSearchInput.addEventListener('input', e => renderGroupedOPs(e.target.value));
-
+ 
 // ==========================================
 // RENDERIZADO — COPIAR OP
 // ==========================================
@@ -302,7 +303,7 @@ async function renderOpCopySelect() {
         sel.innerHTML += `<option value="${op.id}">[${asigName}] C${op.numeroClase}: ${op.nombreReceta}</option>`;
     });
 }
-
+ 
 document.getElementById('btn-copy-op')?.addEventListener('click', async () => {
     const id = document.getElementById('op-copy-select').value;
     if (!id) { alert('Seleccione una OP primero.'); return; }
@@ -318,7 +319,7 @@ document.getElementById('btn-copy-op')?.addEventListener('click', async () => {
         alert('Datos copiados exitosamente.');
     }
 });
-
+ 
 // ==========================================
 // CALENDARIO
 // ==========================================
@@ -351,10 +352,10 @@ async function renderCalendarioFiltros() {
         if (valAsig) selAsig.value = valAsig;
     }
 }
-
+ 
 // Alias para compatibilidad
 async function renderCalendarioFiltroProfesor() { await renderCalendarioFiltros(); }
-
+ 
 document.getElementById('calendario-filtro-profesor')?.addEventListener('change', () => renderCalendar());
 document.getElementById('calendario-filtro-sala')?.addEventListener('change', () => renderCalendar());
 document.getElementById('calendario-filtro-asignatura')?.addEventListener('change', () => renderCalendar());
@@ -364,20 +365,20 @@ document.getElementById('btn-limpiar-filtro-cal')?.addEventListener('click', () 
     document.getElementById('calendario-filtro-asignatura').value = '';
     renderCalendar();
 });
-
+ 
 async function renderCalendar() {
     const filtroProf  = document.getElementById('calendario-filtro-profesor')?.value  || '';
     const filtroSala  = document.getElementById('calendario-filtro-sala')?.value       || '';
     const filtroAsig  = document.getElementById('calendario-filtro-asignatura')?.value || '';
-
+ 
     let eventsData = await fsGetAll('horario');
-
+ 
     if (filtroProf) eventsData = eventsData.filter(e => e.profesorId === filtroProf || e.reemplazoId === filtroProf);
     if (filtroSala) eventsData = eventsData.filter(e => e.sala === filtroSala);
     if (filtroAsig) eventsData = eventsData.filter(e => e.asignaturaId === filtroAsig);
-
+ 
     const [asigs, profs, ops] = await Promise.all([fsGetAll('asignaturas'), fsGetAll('profesores'), fsGetAll('ops')]);
-
+ 
     const events = eventsData.map(ev => {
         const asigName = asigs.find(a => a.id === ev.asignaturaId)?.nombre || 'Clase';
         const op = ops.find(o => o.asignaturaId === ev.asignaturaId && o.numeroClase === ev.clase);
@@ -399,7 +400,7 @@ async function renderCalendar() {
             extendedProps: { profesor: profName, sala: ev.sala, horario: ev.horario, receta, claseNum: ev.clase, asignatura: asigName }
         };
     });
-
+ 
     const el = document.getElementById('calendar-container');
     if (!el) return;
     if (calendar) calendar.destroy();
@@ -414,7 +415,7 @@ async function renderCalendar() {
     calendar.render();
     await renderCalendarioFiltros();
 }
-
+ 
 // ==========================================
 // HORARIO Y FILTROS
 // ==========================================
@@ -428,12 +429,12 @@ async function renderWeekFilter() {
     semanas.forEach(s => sel.innerHTML += `<option value="${s.numero}">Semana ${s.numero}</option>`);
     if (currentValue) sel.value = currentValue;
 }
-
+ 
 document.getElementById('semana-filter')?.addEventListener('change', () => renderHorario());
 document.querySelectorAll('#dias-filter-container input').forEach(input =>
     input.addEventListener('change', () => renderHorario())
 );
-
+ 
 async function renderHorario() {
     const container = document.getElementById('horario-output');
     if (!container) return;
@@ -468,7 +469,7 @@ async function renderHorario() {
             </div>`;
     });
 }
-
+ 
 // ==========================================
 // GESTIÓN DOCENTE
 // ==========================================
@@ -486,7 +487,7 @@ async function renderGestionDocente() {
     cacheHorario = await fsGetAll('horario');
     filtrarYRenderizarTabla();
 }
-
+ 
 window.cambioDocente = async () => {
     const docId = document.getElementById('selDocente').value;
     const selAsig = document.getElementById('selAsignatura');
@@ -505,7 +506,7 @@ window.cambioDocente = async () => {
     selAsig.disabled = false;
     filtrarYRenderizarTabla();
 };
-
+ 
 window.cambioAsignatura = async () => {
     const docId = document.getElementById('selDocente').value;
     const asigId = document.getElementById('selAsignatura').value;
@@ -526,10 +527,10 @@ window.cambioAsignatura = async () => {
     selDia.disabled = false;
     filtrarYRenderizarTabla();
 };
-
+ 
 window.aplicarFiltroFinal = () => filtrarYRenderizarTabla();
 window.limpiarFiltros = () => { document.getElementById('selDocente').value = ""; renderGestionDocente(); };
-
+ 
 async function filtrarYRenderizarTabla() {
     const container = document.getElementById('gestion-docente-output');
     if (!container) return;
@@ -566,7 +567,7 @@ async function filtrarYRenderizarTabla() {
     html += '</tbody></table>';
     container.innerHTML = html;
 }
-
+ 
 // ==========================================
 // FUNCIONES GLOBALES
 // ==========================================
@@ -582,7 +583,7 @@ window.deleteItem = async (store, id) => {
         if (store === 'horario') { await renderHorario(); await renderGestionDocente(); await renderCalendar(); }
     }
 };
-
+ 
 window.editOP = async (id) => {
     const op = await fsGet('ops', id);
     if (!op) return;
@@ -603,7 +604,7 @@ window.editOP = async (id) => {
     document.getElementById('op-form-submit-btn').textContent = 'Actualizar OP';
     document.getElementById('op-form').scrollIntoView({ behavior: 'smooth' });
 };
-
+ 
 window.openEditScheduleModal = async (id) => {
     const c = await fsGet('horario', id);
     if (!c) return;
@@ -618,10 +619,10 @@ window.openEditScheduleModal = async (id) => {
     ps.forEach(p => { if (p.id !== c.profesorId) sel.innerHTML += `<option value="${p.id}">${p.nombre}</option>`; });
     if (c.reemplazoId) sel.value = c.reemplazoId;
 };
-
+ 
 window.removeTempIng = (id) => { ingredientesTemporales = ingredientesTemporales.filter(i => i.id !== id); renderTempIngredientes(); };
 window.removeTempUtensilio = (id) => { utensiliosTemporales = utensiliosTemporales.filter(u => u.id !== id); renderTempUtensilios(); };
-
+ 
 function renderTempIngredientes() {
     document.getElementById('ingredientes-container').innerHTML = ingredientesTemporales.map(i =>
         `<span style="background:#dee2e6;padding:4px 8px;border-radius:10px;margin:2px;display:inline-block;font-size:0.9em;">
@@ -629,7 +630,7 @@ function renderTempIngredientes() {
         </span>`
     ).join('');
 }
-
+ 
 function renderTempUtensilios() {
     document.getElementById('utensilios-container').innerHTML = utensiliosTemporales.map(u =>
         `<span style="background:#ffdae9;padding:4px 8px;border-radius:10px;margin:2px;display:inline-block;font-size:0.9em;">
@@ -637,7 +638,7 @@ function renderTempUtensilios() {
         </span>`
     ).join('');
 }
-
+ 
 // ==========================================
 // ETIQUETAS CON QR
 // ==========================================
@@ -649,7 +650,7 @@ async function renderEtiquetaWeekFilter() {
     sel.innerHTML = '<option value="TODAS">Todas las semanas</option>';
     semanas.forEach(s => sel.innerHTML += `<option value="${s.numero}">Semana ${s.numero}</option>`);
 }
-
+ 
 document.getElementById('btn-generar-etiquetas')?.addEventListener('click', async () => {
     const semanaVal = document.getElementById('etiqueta-semana-filter').value;
     let clases = await fsGetAll('horario');
@@ -658,24 +659,24 @@ document.getElementById('btn-generar-etiquetas')?.addEventListener('click', asyn
     const [profs, asigs, ops] = await Promise.all([fsGetAll('profesores'), fsGetAll('asignaturas'), fsGetAll('ops')]);
     const container = document.getElementById('etiquetas-preview');
     container.innerHTML = '';
-
+ 
     for (const c of clases) {
         const asig = asigs.find(a => a.id === c.asignaturaId);
         const prof = profs.find(p => p.id === c.profesorId);
         const op = ops.find(o => o.asignaturaId === c.asignaturaId && o.numeroClase === c.clase);
         if (!asig || !prof) continue;
-
+ 
         // URL que abrirá el profe al escanear
         const baseUrl = window.location.href.replace(/\?.*$/, '').replace(/#.*$/, '');
         const qrUrl = `${baseUrl}?bodega_scan=1&horarioId=${c.id}`;
-
+ 
         // Wrapper de etiquetas para esta clase
         const wrapper = document.createElement('div');
         wrapper.className = 'etiqueta-grupo';
         wrapper.innerHTML = `<h4 style="color:#0056b3; margin:15px 0 8px 0;">
             ${asig.nombre} — Clase ${c.clase} | ${formatDate(c.fecha)} | ${c.horario} | Sala ${c.sala}
         </h4>`;
-
+ 
         // Etiqueta principal de la canasta
         const etiquetaClase = document.createElement('div');
         etiquetaClase.className = 'etiqueta-clase';
@@ -692,7 +693,7 @@ document.getElementById('btn-generar-etiquetas')?.addEventListener('click', asyn
             <div style="font-size:7pt;color:#666;margin-top:4px;text-align:center;">Escanear para verificar pedido</div>
         `;
         wrapper.appendChild(etiquetaClase);
-
+ 
         // Etiquetas por ingrediente
         if (op && !op.sinPedido && op.ingredientes?.length > 0) {
             const ingsGrid = document.createElement('div');
@@ -711,7 +712,7 @@ document.getElementById('btn-generar-etiquetas')?.addEventListener('click', asyn
             wrapper.appendChild(ingsGrid);
         }
         container.appendChild(wrapper);
-
+ 
         // Generar QR después de insertar en DOM
         setTimeout(() => {
             const div = document.getElementById(`qr-${c.id}`);
@@ -725,12 +726,12 @@ document.getElementById('btn-generar-etiquetas')?.addEventListener('click', asyn
             }
         }, 300);
     }
-
+ 
     document.getElementById('btn-imprimir-etiquetas').style.display = 'inline-block';
 });
-
+ 
 document.getElementById('btn-imprimir-etiquetas')?.addEventListener('click', () => window.print());
-
+ 
 // ==========================================
 // BODEGA — TIEMPO REAL
 // ==========================================
@@ -742,7 +743,7 @@ async function renderBodegaWeekFilter() {
     sel.innerHTML = '<option value="TODAS">Todas</option>';
     semanas.forEach(s => sel.innerHTML += `<option value="${s.numero}">Semana ${s.numero}</option>`);
 }
-
+ 
 document.getElementById('btn-bodega-login')?.addEventListener('click', () => {
     const nombre = document.getElementById('bodega-nombre-input').value.trim();
     if (!nombre) { alert('Ingresa tu nombre para continuar.'); return; }
@@ -752,7 +753,7 @@ document.getElementById('btn-bodega-login')?.addEventListener('click', () => {
     document.getElementById('bodega-operador-display').textContent = bodegaOperador;
     iniciarListenerBodega();
 });
-
+ 
 window.cerrarSesionBodega = () => {
     bodegaOperador = '';
     if (bodegaUnsubscribe) { bodegaUnsubscribe(); bodegaUnsubscribe = null; }
@@ -760,7 +761,7 @@ window.cerrarSesionBodega = () => {
     document.getElementById('bodega-panel').style.display = 'none';
     document.getElementById('bodega-nombre-input').value = '';
 };
-
+ 
 function iniciarListenerBodega() {
     if (bodegaUnsubscribe) bodegaUnsubscribe();
     // Escucha cambios en tiempo real en la colección 'despachos'
@@ -768,21 +769,21 @@ function iniciarListenerBodega() {
         await renderBodegaPedidos();
     });
 }
-
+ 
 document.getElementById('bodega-semana-filter')?.addEventListener('change', () => renderBodegaPedidos());
 document.getElementById('bodega-estado-filter')?.addEventListener('change', () => renderBodegaPedidos());
-
+ 
 async function renderBodegaPedidos() {
     const container = document.getElementById('bodega-pedidos-container');
     const statsEl = document.getElementById('bodega-stats');
     if (!container) return;
-
+ 
     const semanaVal = document.getElementById('bodega-semana-filter')?.value || 'TODAS';
     const estadoVal = document.getElementById('bodega-estado-filter')?.value || 'TODOS';
-
+ 
     let despachos = await fsGetAll('despachos');
     if (semanaVal !== 'TODAS') despachos = despachos.filter(d => d.semana === parseInt(semanaVal));
-
+ 
     // Filtro estado
     despachos = despachos.filter(d => {
         const tieneFaltante = (d.ingredientes || []).some(i => i.estado === 'FALTA');
@@ -792,17 +793,17 @@ async function renderBodegaPedidos() {
         if (estadoVal === 'ALERTA') return tieneFaltante;
         return true;
     });
-
+ 
     despachos.sort((a, b) => (b.timestampEscaneo || 0) - (a.timestampEscaneo || 0));
-
+ 
     const [profs, asigs] = await Promise.all([fsGetAll('profesores'), fsGetAll('asignaturas')]);
-
+ 
     // Stats
     const totalDespachos = despachos.length;
     const conAlertas = despachos.filter(d => (d.ingredientes || []).some(i => i.estado === 'FALTA')).length;
     const verificados = despachos.filter(d => d.verificado).length;
     const pendientes = despachos.filter(d => !d.verificado).length;
-
+ 
     if (statsEl) {
         statsEl.innerHTML = `
             <div class="stat-card stat-total"><div class="stat-num">${totalDespachos}</div><div class="stat-label">Total</div></div>
@@ -811,14 +812,14 @@ async function renderBodegaPedidos() {
             <div class="stat-card stat-alerta"><div class="stat-num">${conAlertas}</div><div class="stat-label">Con alertas</div></div>
         `;
     }
-
+ 
     if (despachos.length === 0) {
         container.innerHTML = '<div style="padding:30px;text-align:center;color:#666;">No hay pedidos con estos filtros.</div>';
         return;
     }
-
+ 
     container.innerHTML = '';
-
+ 
     for (const d of despachos) {
         const asig = asigs.find(a => a.id === d.asignaturaId);
         const prof = profs.find(p => p.id === d.profesorId);
@@ -831,9 +832,9 @@ async function renderBodegaPedidos() {
             estadoActual === 'CON_FALTANTE' ? '<span class="badge badge-alerta">🔴 CON FALTANTES</span>'
             : estadoActual === 'ENTREGADO'  ? '<span class="badge badge-entregado">🟢 ENTREGADO</span>'
             : '<span class="badge badge-pendiente">🟡 PENDIENTE</span>';
-
+ 
         const escaneoTime = d.timestampEscaneo ? new Date(d.timestampEscaneo).toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' }) : '--';
-
+ 
         const filasIng = (d.ingredientes || []).map(ing => {
             const estadoClass = ing.estado === 'OK' ? 'ing-ok' : ing.estado === 'FALTA' ? 'ing-falta' : 'ing-pendiente';
             const estadoIcon = ing.estado === 'OK' ? '✅' : ing.estado === 'FALTA' ? '❌' : '⬜';
@@ -847,11 +848,11 @@ async function renderBodegaPedidos() {
                     </td>
                 </tr>`;
         }).join('');
-
+ 
         const extrasHTML = (d.extras || []).map(e =>
             `<tr style="background:#fff3cd;"><td>➕ ${e.nombre}</td><td>${e.cantidad} ${e.unidad}</td><td><small>Extra solicitado</small></td></tr>`
         ).join('');
-
+ 
         const card = document.createElement('div');
         card.className = `pedido-card ${estadoActual === 'CON_FALTANTE' ? 'pedido-alerta' : estadoActual === 'ENTREGADO' ? 'pedido-ok' : 'pedido-pendiente'}`;
         card.innerHTML = `
@@ -875,7 +876,7 @@ async function renderBodegaPedidos() {
         container.appendChild(card);
     }
 }
-
+ 
 window.marcarIngrediente = async (despachoId, ingId, estado) => {
     const despacho = await fsGet('despachos', despachoId);
     if (!despacho) return;
@@ -892,13 +893,13 @@ window.marcarIngrediente = async (despachoId, ingId, estado) => {
         timestampVerificacion: Date.now()
     });
 };
-
+ 
 window.guardarObservacion = async (despachoId) => {
     const obs = document.getElementById(`obs-${despachoId}`)?.value || '';
     await fsUpdate('despachos', despachoId, { observacion: obs, operador: bodegaOperador });
     alert('Observación guardada.');
 };
-
+ 
 // ==========================================
 // EXPORTAR HISTORIAL BODEGA
 // ==========================================
@@ -949,7 +950,7 @@ document.getElementById('btn-exportar-historial-bodega')?.addEventListener('clic
     XLSX.utils.book_append_sheet(wb, ws, 'Historial Bodega');
     XLSX.writeFile(wb, `Historial_Bodega_${new Date().toISOString().split('T')[0]}.xlsx`);
 });
-
+ 
 // ==========================================
 // MANEJO DEL QR SCAN (apertura desde iPad)
 // ==========================================
@@ -958,7 +959,7 @@ async function handleQRScan() {
     if (!params.get('bodega_scan')) return;
     const horarioId = params.get('horarioId');
     if (!horarioId) return;
-
+ 
     // Mostrar vista de verificación del profesor
     document.querySelectorAll('main section').forEach(s => s.classList.remove('active-section'));
     const vistaProf = document.createElement('section');
@@ -966,20 +967,20 @@ async function handleQRScan() {
     vistaProf.className = 'active-section';
     vistaProf.innerHTML = '<div style="padding:20px;text-align:center;">🔄 Cargando pedido...</div>';
     document.querySelector('main').appendChild(vistaProf);
-
+ 
     const c = await fsGet('horario', horarioId);
     if (!c) { vistaProf.innerHTML = '<div style="padding:20px;text-align:center;color:red;">❌ Clase no encontrada.</div>'; return; }
-
+ 
     const [asig, prof, op] = await Promise.all([
         fsGet('asignaturas', c.asignaturaId),
         fsGet('profesores', c.profesorId),
         fsGetAll('ops').then(ops => ops.find(o => o.asignaturaId === c.asignaturaId && o.numeroClase === c.clase))
     ]);
-
+ 
     // Crear o recuperar despacho
     let despachos = await fsGetAll('despachos');
     let despacho = despachos.find(d => d.horarioId === horarioId);
-
+ 
     if (!despacho) {
         const nuevoId = await fsAdd('despachos', {
             horarioId,
@@ -997,7 +998,7 @@ async function handleQRScan() {
         });
         despacho = await fsGet('despachos', nuevoId);
     }
-
+ 
     // Renderizar vista del profesor
     const ingsHTML = (despacho.ingredientes || []).map(ing => `
         <div class="prof-ing-item" id="pi-${ing.id}">
@@ -1007,7 +1008,7 @@ async function handleQRScan() {
                 <button onclick="profMarcarIng('${despacho.id}','${ing.id}','FALTA')" style="background:#dc3545;padding:5px 12px;">❌ Falta</button>
             </div>
         </div>`).join('');
-
+ 
     vistaProf.innerHTML = `
         <div style="max-width:600px;margin:0 auto;padding:15px;">
             <div style="background:#0056b3;color:white;padding:15px;border-radius:8px;margin-bottom:15px;text-align:center;">
@@ -1031,10 +1032,10 @@ async function handleQRScan() {
             <div id="prof-extras-list" style="margin-top:10px;"></div>
         </div>
     `;
-
+ 
     await renderProfExtras(despacho.id);
 }
-
+ 
 window.profMarcarIng = async (despachoId, ingId, estado) => {
     const d = await fsGet('despachos', despachoId);
     if (!d) return;
@@ -1047,7 +1048,7 @@ window.profMarcarIng = async (despachoId, ingId, estado) => {
         el.style.padding = '8px';
     }
 };
-
+ 
 window.agregarExtra = async (despachoId) => {
     const nombre = document.getElementById('extra-nombre')?.value.trim();
     const cantidad = document.getElementById('extra-cantidad')?.value;
@@ -1062,7 +1063,7 @@ window.agregarExtra = async (despachoId) => {
     await renderProfExtras(despachoId);
     alert('✅ Extra enviado a bodega.');
 };
-
+ 
 async function renderProfExtras(despachoId) {
     const el = document.getElementById('prof-extras-list');
     if (!el) return;
@@ -1071,11 +1072,11 @@ async function renderProfExtras(despachoId) {
     el.innerHTML = '<h5 style="margin:0 0 5px 0;">Extras solicitados:</h5>' +
         d.extras.map(e => `<div style="background:#fff3cd;padding:6px 10px;border-radius:6px;margin:3px 0;">➕ ${e.nombre} — ${e.cantidad} ${e.unidad}</div>`).join('');
 }
-
+ 
 // ==========================================
 // FORMULARIOS — GUARDAR DATOS
 // ==========================================
-
+ 
 // Semana
 document.getElementById('semana-form')?.addEventListener('submit', async e => {
     e.preventDefault();
@@ -1088,7 +1089,7 @@ document.getElementById('semana-form')?.addEventListener('submit', async e => {
     e.target.reset();
     alert('Semana agregada.');
 });
-
+ 
 // Profesor
 document.getElementById('profesor-form')?.addEventListener('submit', async e => {
     e.preventDefault();
@@ -1097,7 +1098,7 @@ document.getElementById('profesor-form')?.addEventListener('submit', async e => 
     e.target.reset();
     alert('Profesor agregado.');
 });
-
+ 
 // Asignatura
 document.getElementById('asignatura-form')?.addEventListener('submit', async e => {
     e.preventDefault();
@@ -1109,7 +1110,7 @@ document.getElementById('asignatura-form')?.addEventListener('submit', async e =
     e.target.reset();
     alert('Asignatura agregada.');
 });
-
+ 
 // Bloqueo
 document.getElementById('bloqueo-form')?.addEventListener('submit', async e => {
     e.preventDefault();
@@ -1120,7 +1121,7 @@ document.getElementById('bloqueo-form')?.addEventListener('submit', async e => {
     await renderBloqueos();
     e.target.reset();
 });
-
+ 
 // Ingrediente BD
 document.getElementById('ingrediente-db-form')?.addEventListener('submit', async e => {
     e.preventDefault();
@@ -1136,7 +1137,7 @@ document.getElementById('ingrediente-db-form')?.addEventListener('submit', async
     e.target.reset();
     alert('Ingrediente agregado.');
 });
-
+ 
 // OP
 async function updateClassSelect() {
     const asigId = this.value;
@@ -1146,16 +1147,16 @@ async function updateClassSelect() {
     const asig = await fsGet('asignaturas', asigId);
     for (let i = 1; i <= asig.totalClases; i++) sel.innerHTML += `<option value="${i}">Clase ${i}</option>`;
 }
-
+ 
 document.getElementById('op-asignatura')?.addEventListener('change', updateClassSelect);
-
+ 
 document.getElementById('op-sin-pedido')?.addEventListener('change', function () {
     const details = document.getElementById('op-details-section');
     const inputNombre = document.getElementById('op-nombre-receta');
     if (this.checked) { details.style.display = 'none'; inputNombre.removeAttribute('required'); }
     else { details.style.display = 'block'; inputNombre.setAttribute('required', 'true'); }
 });
-
+ 
 document.getElementById('op-form')?.addEventListener('submit', async e => {
     e.preventDefault();
     const editId = document.getElementById('op-edit-id').value;
@@ -1189,7 +1190,7 @@ document.getElementById('op-form')?.addEventListener('submit', async e => {
     document.getElementById('op-details-section').style.display = 'block';
     await renderGroupedOPs();
 });
-
+ 
 // Añadir ingrediente temporal
 document.getElementById('add-ingrediente-btn')?.addEventListener('click', async () => {
     const nombre = document.getElementById('ingrediente-nombre-input').value;
@@ -1205,7 +1206,7 @@ document.getElementById('add-ingrediente-btn')?.addEventListener('click', async 
     document.getElementById('ingrediente-cantidad').value = '';
     document.getElementById('ingrediente-unidad').disabled = false;
 });
-
+ 
 // Autocompletado unidad
 document.getElementById('ingrediente-nombre-input')?.addEventListener('input', async function () {
     const ings = await fsGetAll('ingredientes');
@@ -1215,7 +1216,7 @@ document.getElementById('ingrediente-nombre-input')?.addEventListener('input', a
         sel.value = ingDB.unidadDefault; sel.disabled = true;
     } else { sel.disabled = false; }
 });
-
+ 
 // Utensilios
 document.getElementById('add-utensilio-btn')?.addEventListener('click', () => {
     const nombre = document.getElementById('utensilio-nombre').value;
@@ -1226,7 +1227,7 @@ document.getElementById('add-utensilio-btn')?.addEventListener('click', () => {
     document.getElementById('utensilio-nombre').value = '';
     document.getElementById('utensilio-cantidad').value = '';
 });
-
+ 
 // Programar clase
 document.getElementById('schedule-asignatura')?.addEventListener('change', async function () {
     const asigId = this.value;
@@ -1236,7 +1237,7 @@ document.getElementById('schedule-asignatura')?.addEventListener('change', async
     const asig = await fsGet('asignaturas', asigId);
     for (let i = 1; i <= asig.totalClases; i++) sel.innerHTML += `<option value="${i}">Clase ${i}</option>`;
 });
-
+ 
 document.getElementById('schedule-form')?.addEventListener('submit', async e => {
     e.preventDefault();
     const asigId = document.getElementById('schedule-asignatura').value;
@@ -1246,11 +1247,11 @@ document.getElementById('schedule-form')?.addEventListener('submit', async e => 
     const horario = document.getElementById('schedule-horario').value;
     const profId = document.getElementById('schedule-profesor').value;
     const recurring = document.getElementById('schedule-recurring').checked;
-
+ 
     const existing = await fsGetAll('horario');
     const ocupado = existing.find(c => c.fecha === fechaInicio && c.sala === sala && c.horario === horario);
     if (ocupado) { alert(`⚠️ CONFLICTO: La sala ${sala} ya está ocupada ese día y horario.`); return; }
-
+ 
     if (!recurring) {
         const semana = await getWeekNumber(fechaInicio);
         if (!semana) { alert('Fecha fuera de rango de semanas configuradas.'); return; }
@@ -1280,7 +1281,7 @@ document.getElementById('schedule-form')?.addEventListener('submit', async e => 
     }
     await renderHorario(); await renderCalendar(); await renderGestionDocente();
 });
-
+ 
 // Editar clase
 document.getElementById('edit-schedule-form')?.addEventListener('submit', async e => {
     e.preventDefault();
@@ -1296,11 +1297,11 @@ document.getElementById('edit-schedule-form')?.addEventListener('submit', async 
     await renderHorario(); await renderCalendar(); await renderGestionDocente();
     alert('Clase actualizada');
 });
-
+ 
 document.querySelectorAll('.close-btn').forEach(b =>
     b.onclick = () => document.getElementById(b.dataset.modal).style.display = 'none'
 );
-
+ 
 // ==========================================
 // CONSOLIDADO
 // ==========================================
@@ -1316,7 +1317,7 @@ async function renderConsolidadoWeekSelectors() {
         end.innerHTML += `<option value="${s.numero}">Semana ${s.numero}</option>`;
     });
 }
-
+ 
 document.getElementById('generar-consolidado-btn')?.addEventListener('click', async () => {
     const semInicio = parseInt(document.getElementById('consolidado-semana-inicio').value);
     const semFin = parseInt(document.getElementById('consolidado-semana-fin').value);
@@ -1356,7 +1357,7 @@ document.getElementById('generar-consolidado-btn')?.addEventListener('click', as
     document.getElementById('consolidado-detalle').innerHTML = htmlDetalle;
     document.getElementById('consolidado-resultado').style.display = 'block';
 });
-
+ 
 document.getElementById('exportar-excel-btn')?.addEventListener('click', () => {
     if (!datosConsolidadoGlobal.total) { alert("Primero genere el consolidado."); return; }
     const wb = XLSX.utils.book_new();
@@ -1370,7 +1371,7 @@ document.getElementById('exportar-excel-btn')?.addEventListener('click', () => {
     });
     XLSX.writeFile(wb, `Consolidado_Semanas_${datosConsolidadoGlobal.range}.xlsx`);
 });
-
+ 
 // ==========================================
 // EXCEL POR ASIGNATURA
 // ==========================================
@@ -1390,18 +1391,18 @@ window.exportarExcelAsignatura = async (asigId) => {
     });
     XLSX.writeFile(wb, `OPs_${asig.nombre.replace(/\s+/g, '_')}.xlsx`);
 };
-
+ 
 // ==========================================
 // IMPRESIÓN OPs (solo ingredientes)
 // ==========================================
 window.imprimirOps = async () => {
     await generarImpresion('op');
 };
-
+ 
 window.imprimirPanol = async () => {
     await generarImpresion('panol');
 };
-
+ 
 async function generarImpresion(modo) {
     try {
         const semanaVal = document.getElementById('semana-filter').value;
@@ -1410,27 +1411,27 @@ async function generarImpresion(modo) {
         if (semanaVal !== 'TODAS') clases = clases.filter(c => c.semana === parseInt(semanaVal));
         if (diasChecks.length > 0) clases = clases.filter(c => diasChecks.includes(new Date(c.fecha + 'T12:00:00').getDay()));
         if (clases.length === 0) { alert('No hay clases visibles para imprimir.'); return; }
-
+ 
         const area = document.getElementById('print-area');
         area.innerHTML = '';
         const [profs, asigs, ops] = await Promise.all([fsGetAll('profesores'), fsGetAll('asignaturas'), fsGetAll('ops')]);
-
+ 
         for (const c of clases) {
             const asig = asigs.find(a => a.id === c.asignaturaId);
             const prof = profs.find(p => p.id === c.profesorId);
             const op = ops.find(o => o.asignaturaId === c.asignaturaId && o.numeroClase === c.clase);
             if (!asig || !op) continue;
-
+ 
             let infoProfesor = prof?.nombre || 'N/A';
             if (c.reemplazoId) {
                 const r = profs.find(p => p.id === c.reemplazoId)?.nombre;
                 infoProfesor = `${prof?.nombre} (Reemplazo: ${r})`;
             }
-
+ 
             const page = document.createElement('div');
             page.className = 'op-print-sheet';
             page.style.position = 'relative';
-
+ 
             const headerHTML = `
                 <img src="inacap_logo.png" alt="Logo" style="position:absolute;top:0;right:0;max-height:50px;width:auto;">
                 <div class="print-header" style="text-align:center;margin-top:5px;">
@@ -1443,9 +1444,9 @@ async function generarImpresion(modo) {
                         <p><strong>Profesor:</strong> ${infoProfesor} &nbsp;|&nbsp; <strong>Sala:</strong> ${c.sala} &nbsp;|&nbsp; <strong>Fecha:</strong> ${formatDate(c.fecha)} &nbsp;|&nbsp; <strong>Horario:</strong> ${c.horario}</p>
                     </div>
                 </div>`;
-
+ 
             let contenido = '';
-
+ 
             if (op.sinPedido) {
                 contenido = '<div style="padding:20px;text-align:center;border:1px solid #000;margin-top:20px;"><h3>CLASE TEÓRICA - SIN PEDIDO</h3></div>';
             } else if (modo === 'op') {
@@ -1489,7 +1490,7 @@ async function generarImpresion(modo) {
                             </div>
                         </div>
                     </div>`;
-
+ 
             } else {
                 // ——— HOJA DE PAÑOL: Utensilios + Vajilla ———
                 let filasPanol = (op.utensilios || []).map(u =>
@@ -1497,7 +1498,7 @@ async function generarImpresion(modo) {
                 ).join('');
                 // Filas vacías para agregar a mano
                 for (let i = 0; i < 6; i++) filasPanol += '<tr><td style="height:18px;"></td><td></td><td style="border:1px solid #000;"></td></tr>';
-
+ 
                 const tablaPanolHTML = `
                     <table class="print-table" style="width:100%;">
                         <thead>
@@ -1509,7 +1510,7 @@ async function generarImpresion(modo) {
                         </thead>
                         <tbody>${filasPanol}</tbody>
                     </table>`;
-
+ 
                 const filasVajilla = LISTA_VAJILLA.map(v =>
                     `<tr>
                         <td style="padding:1px 4px;">${v}</td>
@@ -1517,7 +1518,7 @@ async function generarImpresion(modo) {
                         <td style="border:1px solid #000;width:25px;"></td>
                     </tr>`
                 ).join('');
-
+ 
                 const tablaVajillaHTML = `
                     <table class="print-table" style="width:100%;">
                         <thead>
@@ -1529,7 +1530,7 @@ async function generarImpresion(modo) {
                         </thead>
                         <tbody>${filasVajilla}</tbody>
                     </table>`;
-
+ 
                 contenido = `
                     <p style="margin:8px 0 4px 0; font-size:9pt;">
                         <strong>Encargado Pañol:</strong> ${op.docentePanol || '___________________________'}
@@ -1555,13 +1556,438 @@ async function generarImpresion(modo) {
                         </div>
                     </div>`;
             }
-
+ 
             page.innerHTML = headerHTML + contenido;
             area.appendChild(page);
         }
         window.print();
     } catch (error) { console.error(error); alert("Error al imprimir: " + error.message); }
 }
-
+ 
 // Verificar si la página fue abierta por QR
 handleQRScan();
+ 
+// ==========================================
+// MÓDULO STOCK — CONTROL DE INVENTARIO
+// ==========================================
+ 
+// --- Listeners Stock ---
+document.getElementById('btn-stock-ingresar')?.addEventListener('click', async () => {
+    const nombre   = document.getElementById('stock-ing-nombre').value.trim();
+    const cantidad = parseFloat(document.getElementById('stock-ing-cantidad').value);
+    const unidad   = document.getElementById('stock-ing-unidad').value;
+    const nota     = document.getElementById('stock-ing-nota').value.trim();
+ 
+    if (!nombre || isNaN(cantidad) || cantidad <= 0) {
+        alert('Completa nombre y cantidad válida.'); return;
+    }
+ 
+    // Registrar movimiento de ingreso
+    await fsAdd('stock_movimientos', {
+        tipo: 'INGRESO',
+        nombre,
+        cantidad,
+        unidad,
+        nota,
+        fecha: new Date().toISOString().split('T')[0],
+        timestamp: Date.now()
+    });
+ 
+    // Actualizar stock actual
+    await actualizarStockActual(nombre, unidad, cantidad);
+ 
+    // Limpiar form
+    document.getElementById('stock-ing-nombre').value = '';
+    document.getElementById('stock-ing-cantidad').value = '';
+    document.getElementById('stock-ing-nota').value = '';
+ 
+    alert(`✅ Ingreso registrado: ${cantidad} ${unidad} de ${nombre}`);
+    await renderStock();
+});
+ 
+document.getElementById('stock-semana-filter')?.addEventListener('change', () => renderStockTabla());
+document.getElementById('stock-estado-filter')?.addEventListener('change', () => renderStockTabla());
+document.getElementById('stock-historial-search')?.addEventListener('input', (e) => renderStockHistorial(e.target.value));
+ 
+document.getElementById('btn-stock-exportar')?.addEventListener('click', async () => {
+    const movimientos = await fsGetAll('stock_movimientos');
+    movimientos.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+    const wb = XLSX.utils.book_new();
+    // Hoja stock actual
+    const stockActual = await fsGetAll('stock_actual');
+    const dataStock = stockActual.map(s => ({
+        'Ingrediente': s.nombre,
+        'Unidad': s.unidad,
+        'Stock Actual': s.cantidad,
+        'Último Movimiento': formatDate(s.ultimaActualizacion || '')
+    }));
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(dataStock), 'Stock Actual');
+    // Hoja historial
+    const dataHist = movimientos.map(m => ({
+        'Fecha': formatDate(m.fecha),
+        'Tipo': m.tipo,
+        'Ingrediente': m.nombre,
+        'Cantidad': m.tipo === 'INGRESO' ? `+${m.cantidad}` : `-${m.cantidad}`,
+        'Unidad': m.unidad,
+        'Referencia': m.referencia || m.nota || '',
+    }));
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(dataHist), 'Historial');
+    XLSX.writeFile(wb, `Stock_Bodega_${new Date().toISOString().split('T')[0]}.xlsx`);
+});
+ 
+// --- Función principal renderStock ---
+async function renderStock() {
+    await renderStockIngDatalist();
+    await renderStockAlertas();
+    await renderStockTabla();
+    await renderStockHistorial();
+}
+ 
+// Llenar datalist con ingredientes + insumos
+async function renderStockIngDatalist() {
+    const datalist = document.getElementById('stock-ing-datalist');
+    if (!datalist) return;
+    const ings = await fsGetAll('ingredientes');
+    ings.sort((a, b) => a.nombre.localeCompare(b.nombre));
+    datalist.innerHTML = ings.map(i => `<option value="${i.nombre}">`).join('');
+    // Autocompletar unidad al seleccionar ingrediente
+    const input = document.getElementById('stock-ing-nombre');
+    if (input) {
+        input.addEventListener('change', async function() {
+            const ingDB = ings.find(i => i.nombre.toLowerCase() === this.value.toLowerCase());
+            if (ingDB && ingDB.unidadDefault && ingDB.unidadDefault !== 'LIBRE') {
+                document.getElementById('stock-ing-unidad').value = ingDB.unidadDefault;
+            }
+        });
+    }
+}
+ 
+// Actualizar o crear documento en stock_actual
+async function actualizarStockActual(nombre, unidad, delta) {
+    const todos = await fsGetAll('stock_actual');
+    const existing = todos.find(s =>
+        s.nombre.toLowerCase() === nombre.toLowerCase() && s.unidad === unidad
+    );
+    const hoy = new Date().toISOString().split('T')[0];
+    if (existing) {
+        const nuevaCant = Math.max(0, (existing.cantidad || 0) + delta);
+        await fsUpdate('stock_actual', existing.id, {
+            cantidad: nuevaCant,
+            ultimaActualizacion: hoy
+        });
+    } else {
+        await fsAdd('stock_actual', {
+            nombre,
+            unidad,
+            cantidad: Math.max(0, delta),
+            ultimaActualizacion: hoy
+        });
+    }
+}
+ 
+// Descuento automático cuando bodega marca un ingrediente como OK
+async function descontarStockDespacho(nombreIng, cantidad, unidad, referencia) {
+    await fsAdd('stock_movimientos', {
+        tipo: 'DESPACHO',
+        nombre: nombreIng,
+        cantidad,
+        unidad,
+        referencia,
+        fecha: new Date().toISOString().split('T')[0],
+        timestamp: Date.now()
+    });
+    await actualizarStockActual(nombreIng, unidad, -cantidad);
+}
+ 
+// --- Alertas pre-semana ---
+async function renderStockAlertas() {
+    const el = document.getElementById('stock-alertas');
+    if (!el) return;
+ 
+    // Obtener próxima semana con clases
+    const semanas = await fsGetAll('semanas');
+    semanas.sort((a, b) => a.numero - b.numero);
+    const hoy = new Date();
+    const proxSemana = semanas.find(s => new Date(s.fechaInicio + 'T12:00:00') >= hoy);
+    if (!proxSemana) { el.innerHTML = ''; return; }
+ 
+    // Calcular lo que se necesita para la próxima semana
+    const [clases, ops, stockActual] = await Promise.all([
+        fsGetAll('horario'), fsGetAll('ops'), fsGetAll('stock_actual')
+    ]);
+ 
+    const clasesProxSemana = clases.filter(c => c.semana === proxSemana.numero);
+    const necesidades = {};
+ 
+    clasesProxSemana.forEach(c => {
+        const op = ops.find(o => o.asignaturaId === c.asignaturaId && o.numeroClase === c.clase);
+        if (op && !op.sinPedido) {
+            (op.ingredientes || []).forEach(ing => {
+                const key = `${ing.nombre}|${ing.unidad}`;
+                if (!necesidades[key]) necesidades[key] = { nombre: ing.nombre, unidad: ing.unidad, cant: 0 };
+                necesidades[key].cant += parseFloat(ing.cantidad);
+            });
+        }
+    });
+ 
+    // Comparar con stock actual
+    const alertas = [];
+    Object.values(necesidades).forEach(n => {
+        const stockItem = stockActual.find(s =>
+            s.nombre.toLowerCase() === n.nombre.toLowerCase() && s.unidad === n.unidad
+        );
+        const stockDisp = stockItem?.cantidad || 0;
+        const falta = n.cant - stockDisp;
+        if (falta > 0) {
+            alertas.push({ nombre: n.nombre, unidad: n.unidad, necesita: n.cant, tiene: stockDisp, falta });
+        }
+    });
+ 
+    if (alertas.length === 0) {
+        el.innerHTML = `
+            <div class="card" style="border-left:5px solid #28a745; background:#f0fff4; margin-bottom:15px;">
+                <b>✅ Stock OK para Semana ${proxSemana.numero}</b> — Tienes suficiente de todo.
+            </div>`;
+        return;
+    }
+ 
+    const filasAlertas = alertas.map(a => `
+        <tr style="background:${a.tiene === 0 ? '#fff5f5' : '#fffbf0'};">
+            <td>${a.tiene === 0 ? '🔴' : '🟡'} ${a.nombre}</td>
+            <td style="text-align:center;">${a.necesita.toFixed(2)} ${a.unidad}</td>
+            <td style="text-align:center;">${a.tiene.toFixed(2)} ${a.unidad}</td>
+            <td style="text-align:center; color:#dc3545; font-weight:bold;">
+                ${a.falta.toFixed(2)} ${a.unidad}
+            </td>
+        </tr>`).join('');
+ 
+    el.innerHTML = `
+        <div class="card" style="border-left:5px solid #dc3545; background:#fff8f8; margin-bottom:15px;">
+            <h4 style="color:#dc3545; margin-top:0;">⚠️ Stock Insuficiente para Semana ${proxSemana.numero}</h4>
+            <table class="consolidado-table">
+                <thead>
+                    <tr>
+                        <th>Ingrediente</th>
+                        <th>Necesitas</th>
+                        <th>Tienes</th>
+                        <th>Faltan</th>
+                    </tr>
+                </thead>
+                <tbody>${filasAlertas}</tbody>
+            </table>
+        </div>`;
+}
+ 
+// --- Tabla stock actual ---
+async function renderStockTabla() {
+    const container = document.getElementById('stock-tabla-container');
+    if (!container) return;
+ 
+    const estadoFiltro = document.getElementById('stock-estado-filter')?.value || 'TODOS';
+ 
+    const [stockActual, clases, ops, semanas] = await Promise.all([
+        fsGetAll('stock_actual'), fsGetAll('horario'), fsGetAll('ops'), fsGetAll('semanas')
+    ]);
+ 
+    // Calcular comprometido (suma de todas las clases futuras sin despachar)
+    const hoy = new Date().toISOString().split('T')[0];
+    const clasesFuturas = clases.filter(c => c.fecha >= hoy);
+    const comprometido = {};
+ 
+    clasesFuturas.forEach(c => {
+        const op = ops.find(o => o.asignaturaId === c.asignaturaId && o.numeroClase === c.clase);
+        if (op && !op.sinPedido) {
+            (op.ingredientes || []).forEach(ing => {
+                const key = `${ing.nombre}|${ing.unidad}`;
+                if (!comprometido[key]) comprometido[key] = 0;
+                comprometido[key] += parseFloat(ing.cantidad);
+            });
+        }
+    });
+ 
+    // Construir tabla unificada (stock + lo que aparece en OPs pero sin stock)
+    const todosItems = new Map();
+ 
+    // Primero los que tienen stock
+    stockActual.forEach(s => {
+        const key = `${s.nombre}|${s.unidad}`;
+        todosItems.set(key, {
+            nombre: s.nombre,
+            unidad: s.unidad,
+            stock: s.cantidad || 0,
+            comprometido: comprometido[key] || 0,
+            id: s.id
+        });
+    });
+ 
+    // Luego los comprometidos sin stock registrado
+    Object.entries(comprometido).forEach(([key, cant]) => {
+        if (!todosItems.has(key)) {
+            const [nombre, unidad] = key.split('|');
+            todosItems.set(key, { nombre, unidad, stock: 0, comprometido: cant, id: null });
+        }
+    });
+ 
+    let items = Array.from(todosItems.values());
+    items.sort((a, b) => a.nombre.localeCompare(b.nombre));
+ 
+    // Aplicar filtro estado
+    items = items.filter(item => {
+        const libre = item.stock - item.comprometido;
+        if (estadoFiltro === 'CRITICO') return libre < 0;
+        if (estadoFiltro === 'BAJO')    return libre >= 0 && libre < item.comprometido * 0.2;
+        if (estadoFiltro === 'OK')      return libre >= item.comprometido * 0.2;
+        return true;
+    });
+ 
+    if (items.length === 0) {
+        container.innerHTML = '<div style="padding:20px;text-align:center;color:#666;">No hay stock registrado aún. Usa el formulario de arriba para ingresar mercadería.</div>';
+        return;
+    }
+ 
+    const filas = items.map(item => {
+        const libre = item.stock - item.comprometido;
+        const pct   = item.comprometido > 0 ? Math.min(100, (item.stock / item.comprometido) * 100) : 100;
+        const color = libre < 0 ? '#dc3545' : libre < item.comprometido * 0.2 ? '#fd7e14' : '#28a745';
+        const icono = libre < 0 ? '🔴' : libre < item.comprometido * 0.2 ? '🟡' : '🟢';
+        const barColor = libre < 0 ? '#dc3545' : libre < item.comprometido * 0.2 ? '#ffc107' : '#28a745';
+ 
+        return `
+            <tr>
+                <td><b>${icono} ${item.nombre}</b></td>
+                <td style="text-align:center;">${item.unidad}</td>
+                <td style="text-align:center; font-weight:bold;">${item.stock.toFixed(2)}</td>
+                <td style="text-align:center; color:#6c757d;">${item.comprometido.toFixed(2)}</td>
+                <td style="text-align:center; color:${color}; font-weight:bold;">
+                    ${libre.toFixed(2)}
+                </td>
+                <td style="min-width:100px;">
+                    <div style="background:#e9ecef;border-radius:4px;height:8px;overflow:hidden;">
+                        <div style="background:${barColor};height:100%;width:${pct}%;transition:width 0.3s;"></div>
+                    </div>
+                </td>
+                <td>
+                    <button onclick="ajustarStock('${item.nombre}','${item.unidad}')"
+                        style="background:#17a2b8;padding:3px 8px;font-size:11px;">✏️ Ajustar</button>
+                </td>
+            </tr>`;
+    }).join('');
+ 
+    container.innerHTML = `
+        <table class="consolidado-table">
+            <thead>
+                <tr>
+                    <th>Ingrediente / Insumo</th>
+                    <th>Unidad</th>
+                    <th>Stock Actual</th>
+                    <th>Comprometido</th>
+                    <th>Libre</th>
+                    <th>Nivel</th>
+                    <th>Acción</th>
+                </tr>
+            </thead>
+            <tbody>${filas}</tbody>
+        </table>`;
+}
+ 
+// --- Ajuste manual de stock ---
+window.ajustarStock = async (nombre, unidad) => {
+    const stockActual = await fsGetAll('stock_actual');
+    const item = stockActual.find(s => s.nombre.toLowerCase() === nombre.toLowerCase() && s.unidad === unidad);
+    const actual = item?.cantidad || 0;
+    const nueva = prompt(`Ajuste de stock — ${nombre} (${unidad})\nStock actual: ${actual}\nNuevo stock total:`, actual);
+    if (nueva === null) return;
+    const nuevaCant = parseFloat(nueva);
+    if (isNaN(nuevaCant) || nuevaCant < 0) { alert('Cantidad inválida.'); return; }
+    const diff = nuevaCant - actual;
+    await actualizarStockActual(nombre, unidad, diff);
+    await fsAdd('stock_movimientos', {
+        tipo: 'AJUSTE',
+        nombre, cantidad: Math.abs(diff), unidad,
+        nota: `Ajuste manual: ${actual} → ${nuevaCant}`,
+        fecha: new Date().toISOString().split('T')[0],
+        timestamp: Date.now()
+    });
+    await renderStock();
+    alert(`✅ Stock ajustado a ${nuevaCant} ${unidad}`);
+};
+ 
+// --- Historial de movimientos ---
+async function renderStockHistorial(search = '') {
+    const container = document.getElementById('stock-historial-container');
+    if (!container) return;
+ 
+    let movimientos = await fsGetAll('stock_movimientos');
+    movimientos.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+ 
+    if (search) {
+        const term = search.toLowerCase();
+        movimientos = movimientos.filter(m => m.nombre.toLowerCase().includes(term));
+    }
+ 
+    // Mostrar últimos 100
+    movimientos = movimientos.slice(0, 100);
+ 
+    if (movimientos.length === 0) {
+        container.innerHTML = '<div style="padding:20px;text-align:center;color:#666;">No hay movimientos registrados.</div>';
+        return;
+    }
+ 
+    const filas = movimientos.map(m => {
+        const esIngreso = m.tipo === 'INGRESO';
+        const esAjuste  = m.tipo === 'AJUSTE';
+        const icono  = esIngreso ? '📥' : esAjuste ? '✏️' : '📤';
+        const color  = esIngreso ? '#28a745' : esAjuste ? '#17a2b8' : '#dc3545';
+        const signo  = esIngreso ? '+' : '-';
+        const rowBg  = esIngreso ? '#f0fff4' : esAjuste ? '#e8f4fd' : '#fff8f8';
+ 
+        return `
+            <tr style="background:${rowBg};">
+                <td>${icono} <b style="color:${color};">${m.tipo}</b></td>
+                <td>${formatDate(m.fecha)}</td>
+                <td>${m.nombre}</td>
+                <td style="text-align:center; color:${color}; font-weight:bold;">
+                    ${esAjuste ? '~' : signo}${m.cantidad.toFixed(2)} ${m.unidad}
+                </td>
+                <td style="color:#666; font-size:0.9em;">${m.referencia || m.nota || '—'}</td>
+            </tr>`;
+    }).join('');
+ 
+    container.innerHTML = `
+        <table class="consolidado-table">
+            <thead>
+                <tr>
+                    <th>Tipo</th>
+                    <th>Fecha</th>
+                    <th>Ingrediente</th>
+                    <th>Cantidad</th>
+                    <th>Referencia</th>
+                </tr>
+            </thead>
+            <tbody>${filas}</tbody>
+        </table>`;
+}
+ 
+// ==========================================
+// HOOK: Descuento automático al marcar OK en bodega
+// ==========================================
+// Sobreescribir marcarIngrediente para incluir descuento de stock
+const _marcarIngredienteOriginal = window.marcarIngrediente;
+window.marcarIngrediente = async (despachoId, ingId, estado) => {
+    // Si se marca como OK, descontar del stock
+    if (estado === 'OK') {
+        const despacho = await fsGet('despachos', despachoId);
+        if (despacho) {
+            const ing = (despacho.ingredientes || []).find(i => i.id === ingId);
+            // Solo descontar si antes NO era OK (evitar doble descuento)
+            if (ing && ing.estado !== 'OK') {
+                const asigs = await fsGetAll('asignaturas');
+                const asig  = asigs.find(a => a.id === despacho.asignaturaId);
+                const ref   = `${asig?.nombre || 'Clase'} C${despacho.clase} — ${formatDate(despacho.fecha)}`;
+                await descontarStockDespacho(ing.nombre, parseFloat(ing.cantidad), ing.unidad, ref);
+            }
+        }
+    }
+    // Ejecutar lógica original
+    await _marcarIngredienteOriginal(despachoId, ingId, estado);
+};
